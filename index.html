@@ -604,6 +604,7 @@
     <div class="life-countdown" id="life-countdown-area">
       <div class="life-cd-title">REMAINING LIFE</div>
       <div class="life-unit-selector" id="life-unit-selector">
+        <button class="unit-btn" data-unit="years" onclick="setLifeUnit('years')">年</button>
         <button class="unit-btn" data-unit="months" onclick="setLifeUnit('months')">月</button>
         <button class="unit-btn" data-unit="weeks" onclick="setLifeUnit('weeks')">週</button>
         <button class="unit-btn active" data-unit="days" onclick="setLifeUnit('days')">日</button>
@@ -1086,9 +1087,12 @@ function populateTaskDropdowns(startTime, duration){
   }
   const ds=document.getElementById('t-duration');
   ds.innerHTML='';
-  for(let m=15;m<=240;m+=15){
+  for(let m=15;m<=540;m+=15){
     const opt=document.createElement('option');
-    opt.value=m; opt.textContent=`${m}分`;
+    const h=Math.floor(m/60);
+    const min=m%60;
+    const label=h>0?(min>0?`${h}時間${min}分`:`${h}時間`):`${m}分`;
+    opt.value=m; opt.textContent=label;
     if(duration?parseInt(duration)===m:m===60) opt.selected=true;
     ds.appendChild(opt);
   }
@@ -1184,6 +1188,7 @@ function saveTask(){
 
 function deleteTaskFromModal(){
   if(editingTaskIdx===null) return;
+  if(!confirm('このタスクを削除しますか？')) return;
   const tasks=DB.get('tasks')||[];
   tasks.splice(editingTaskIdx,1);
   DB.set('tasks',tasks);
@@ -1335,13 +1340,14 @@ function setLifeUnit(unit){
 function calcCountdownValue(diff, unit){
   const totalSec = Math.floor(diff/1000);
   switch(unit){
-    case 'months':  return { val: Math.floor(totalSec/2629800), label: 'ヶ月' };
-    case 'weeks':   return { val: Math.floor(totalSec/604800),  label: '週間' };
-    case 'days':    return { val: Math.floor(totalSec/86400),   label: '日' };
-    case 'hours':   return { val: Math.floor(totalSec/3600),    label: '時間' };
-    case 'minutes': return { val: Math.floor(totalSec/60),      label: '分' };
-    case 'seconds': return { val: totalSec,                     label: '秒' };
-    default:        return { val: Math.floor(totalSec/86400),   label: '日' };
+    case 'years':   return { val: Math.floor(totalSec/31557600), label: '年' };
+    case 'months':  return { val: Math.floor(totalSec/2629800),  label: 'ヶ月' };
+    case 'weeks':   return { val: Math.floor(totalSec/604800),   label: '週間' };
+    case 'days':    return { val: Math.floor(totalSec/86400),    label: '日' };
+    case 'hours':   return { val: Math.floor(totalSec/3600),     label: '時間' };
+    case 'minutes': return { val: Math.floor(totalSec/60),       label: '分' };
+    case 'seconds': return { val: totalSec,                      label: '秒' };
+    default:        return { val: Math.floor(totalSec/86400),    label: '日' };
   }
 }
 
