@@ -710,8 +710,8 @@
       <label class="form-label">その他</label>
       <select class="form-input" id="w-other"></select>
     </div>
-    <button class="btn-primary" style="background:var(--danger);border-color:var(--danger)" onclick="saveWaste()">記録する</button>
-    <button class="btn-secondary" onclick="closeModal('modal-waste')">キャンセル</button>
+    <button class="btn-primary" id="waste-save-btn" style="background:var(--danger);border-color:var(--danger)">記録する</button>
+    <button class="btn-secondary" id="waste-cancel-btn" onclick="closeModal('modal-waste')">キャンセル</button>
   </div>
 </div>
 
@@ -948,15 +948,12 @@ function forceWasteInput(dateStr){
       el.appendChild(o);
     }
   });
-  // キャンセルボタンを非表示にして強制入力
   const modal = document.getElementById('modal-waste');
   modal.classList.remove('hidden');
-  const cancelBtn = modal.querySelector('.btn-secondary');
-  if(cancelBtn) cancelBtn.style.display='none';
-  // saveWaste後にキャンセルボタンを戻す
-  const origSave = document.querySelector('#modal-waste .btn-primary');
-  origSave.onclick = function(){
-    const today = todayStr();
+  // キャンセル非表示
+  document.getElementById('waste-cancel-btn').style.display = 'none';
+  // 保存ボタンに強制入力用の処理をセット
+  document.getElementById('waste-save-btn').onclick = function(){
     const logs = DB.get('waste-logs') || {};
     logs[dateStr] = {
       sleep:  parseInt(document.getElementById('w-sleep').value)||0,
@@ -967,9 +964,7 @@ function forceWasteInput(dateStr){
       other:  parseInt(document.getElementById('w-other').value)||0,
     };
     DB.set('waste-logs', logs);
-    if(cancelBtn) cancelBtn.style.display='block';
-    origSave.onclick = saveWaste;
-    closeModal('modal-waste');
+    modal.classList.add('hidden');
     updatePreviews();
     // まだ未入力があれば再チェック
     checkUnfilledWaste();
@@ -2053,6 +2048,8 @@ function showWasteInput(){
     }
   });
   document.getElementById('modal-waste').classList.remove('hidden');
+  document.getElementById('waste-save-btn').onclick = saveWaste;
+  document.getElementById('waste-cancel-btn').style.display = 'block';
 }
 
 function saveWaste(){
@@ -2067,7 +2064,11 @@ function saveWaste(){
     other:  parseInt(document.getElementById('w-other').value)||0,
   };
   DB.set('waste-logs', logs);
-  closeModal('modal-waste');
+  // 確実にモーダルを閉じる
+  const modal = document.getElementById('modal-waste');
+  modal.classList.add('hidden');
+  modal.style.display = 'none';
+  setTimeout(() => { modal.style.display = ''; }, 100);
   renderWasteScreen();
   updatePreviews();
 }
