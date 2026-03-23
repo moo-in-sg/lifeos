@@ -553,17 +553,15 @@
       <div class="card-icon">💀</div>
     </div>
   </div>
-  <!-- 右下歯車ボタン -->
-  <button onclick="showAppSettings()" style="position:fixed;bottom:24px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text3);font-size:18px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center">⚙</button>
+
 </div>
 
 <!-- APP SETTINGS MODAL -->
 <div id="modal-app-settings" style="display:none;position:fixed;inset:0;z-index:500;background:#00000088;align-items:flex-end;justify-content:center">
   <div class="modal-sheet" style="width:100%">
     <div class="modal-title">SETTINGS</div>
-    <div style="font-family:Space Mono;font-size:11px;color:var(--text2);margin-bottom:20px;line-height:1.8">全データを削除します。<br>この操作は取り消せません。</div>
-    <button onclick="clearAllData()" style="width:100%;padding:14px;background:var(--danger);border:none;color:white;font-family:Noto Serif JP;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin-bottom:8px">全データを削除する</button>
-    <button onclick="document.getElementById('modal-app-settings').style.display='none'" style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--text2);font-family:Noto Serif JP;font-size:13px;cursor:pointer;border-radius:2px">キャンセル</button>
+    <div style="font-family:Space Mono;font-size:11px;color:var(--text2);margin-bottom:20px;line-height:1.8">アプリ設定</div>
+    <button onclick="document.getElementById('modal-app-settings').style.display='none'" style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--text2);font-family:Noto Serif JP;font-size:13px;cursor:pointer;border-radius:2px">閉じる</button>
   </div>
 </div>
 
@@ -648,6 +646,7 @@
   <div class="screen-header">
     <button class="back-btn" onclick="closeScreen('waste')">←</button>
     <div class="screen-title">WASTE LOG</div>
+    <button class="icon-btn" onclick="showWasteSettings()" style="color:var(--danger);border-color:var(--danger)">⚙</button>
   </div>
   <div class="screen-body">
     <!-- 日付選択 -->
@@ -725,6 +724,26 @@
         <div id="waste-history"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- TASK DELETE MODAL -->
+<div id="modal-task-delete" style="display:none;position:fixed;inset:0;z-index:600;background:#00000099;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg2);border:1px solid var(--danger);border-radius:4px;padding:24px;width:100%;max-width:320px">
+    <div style="font-family:Bebas Neue;font-size:18px;letter-spacing:3px;color:var(--danger);margin-bottom:12px">DELETE TASK</div>
+    <div style="font-family:Space Mono;font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:20px">このタスクを削除します。</div>
+    <button onclick="executeTaskDelete()" style="width:100%;padding:14px;background:var(--danger);border:none;color:white;font-family:Noto Serif JP;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin-bottom:8px">削除する</button>
+    <button onclick="document.getElementById('modal-task-delete').style.display='none'" style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--text2);font-family:Noto Serif JP;font-size:13px;cursor:pointer;border-radius:2px">キャンセル</button>
+  </div>
+</div>
+
+<!-- WASTE RESET MODAL -->
+<div id="modal-waste-reset" style="display:none;position:fixed;inset:0;z-index:600;background:#00000099;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg2);border:1px solid var(--danger);border-radius:4px;padding:24px;width:100%;max-width:320px">
+    <div style="font-family:Bebas Neue;font-size:18px;letter-spacing:3px;color:var(--danger);margin-bottom:12px">RESET</div>
+    <div style="font-family:Space Mono;font-size:11px;color:var(--text2);line-height:1.8;margin-bottom:20px">浪費記録を全て削除します。<br>この操作は取り消せません。</div>
+    <button onclick="executeWasteReset()" style="width:100%;padding:14px;background:var(--danger);border:none;color:white;font-family:Noto Serif JP;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin-bottom:8px">削除する</button>
+    <button onclick="document.getElementById('modal-waste-reset').style.display='none'" style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--text2);font-family:Noto Serif JP;font-size:13px;cursor:pointer;border-radius:2px">キャンセル</button>
   </div>
 </div>
 
@@ -1237,9 +1256,29 @@ function renderTaskList(){
         ${isRecurring?wdStr:''}
       </div>
       <span class="task-item-tag ${isRecurring?'tag-recurring':'tag-spot'}">${isRecurring?'RECURRING':'SPOT'}</span>
-      <div style="position:absolute;top:12px;right:12px;font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:1px">編集</div>
+      <div style="position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        <span style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:1px;cursor:pointer">編集</span>
+        <button onclick="event.stopPropagation();deleteTaskDirect(${i})" style="background:none;border:none;color:var(--danger);font-family:Space Mono;font-size:9px;padding:0;cursor:pointer;letter-spacing:1px">削除</button>
+        <button onclick="event.stopPropagation();duplicateTask(${i})" style="background:none;border:none;color:var(--accent2);font-family:Space Mono;font-size:9px;padding:0;cursor:pointer;letter-spacing:1px">複製</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+let deletingTaskIdx = null;
+
+function deleteTaskDirect(idx){
+  deletingTaskIdx = idx;
+  document.getElementById('modal-task-delete').style.display = 'flex';
+}
+
+function duplicateTask(idx){
+  const tasks = DB.get('tasks')||[];
+  const original = tasks[idx];
+  const copy = {...original, id: Date.now(), name: original.name + '（複製）'};
+  tasks.splice(idx+1, 0, copy);
+  DB.set('tasks', tasks);
+  renderTaskList();
 }
 
 function deleteTask(idx){
@@ -1369,11 +1408,18 @@ function saveTask(){
 
 function deleteTaskFromModal(){
   if(editingTaskIdx===null) return;
-  if(!confirm('このタスクを削除しますか？')) return;
+  deletingTaskIdx = editingTaskIdx;
+  document.getElementById('modal-task').classList.add('hidden');
+  document.getElementById('modal-task-delete').style.display = 'flex';
+}
+
+function executeTaskDelete(){
+  if(deletingTaskIdx === null) return;
   const tasks=DB.get('tasks')||[];
-  tasks.splice(editingTaskIdx,1);
+  tasks.splice(deletingTaskIdx,1);
   DB.set('tasks',tasks);
-  closeModal('modal-task');
+  deletingTaskIdx = null;
+  document.getElementById('modal-task-delete').style.display = 'none';
   renderTaskList();
 }
 
@@ -2038,11 +2084,15 @@ function showAppSettings(){
   document.getElementById('modal-app-settings').style.display = 'flex';
 }
 
-function clearAllData(){
-  if(!confirm('本当に全データを削除しますか？この操作は取り消せません。')) return;
-  localStorage.clear();
-  document.getElementById('modal-app-settings').style.display = 'none';
-  location.reload();
+function showWasteSettings(){
+  document.getElementById('modal-waste-reset').style.display = 'flex';
+}
+
+function executeWasteReset(){
+  DB.set('waste-logs', {});
+  document.getElementById('modal-waste-reset').style.display = 'none';
+  renderWasteScreen();
+  updatePreviews();
 }
 
 // ===== SERVICE WORKER =====
