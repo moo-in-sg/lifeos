@@ -710,8 +710,8 @@
       <label class="form-label">その他</label>
       <select class="form-input" id="w-other"></select>
     </div>
-    <button class="btn-primary" id="waste-save-btn" style="background:var(--danger);border-color:var(--danger)">記録する</button>
-    <button class="btn-secondary" id="waste-cancel-btn" onclick="closeModal('modal-waste')">キャンセル</button>
+    <button class="btn-primary" id="waste-save-btn" style="background:var(--danger);border-color:var(--danger)" onclick="saveWasteAndClose()">記録する</button>
+    <button class="btn-secondary" id="waste-cancel-btn" onclick="document.getElementById('modal-waste').classList.add('hidden')">キャンセル</button>
   </div>
 </div>
 
@@ -948,11 +948,8 @@ function forceWasteInput(dateStr){
       el.appendChild(o);
     }
   });
-  const modal = document.getElementById('modal-waste');
-  modal.classList.remove('hidden');
-  // キャンセル非表示
+  wasteModalOpen();
   document.getElementById('waste-cancel-btn').style.display = 'none';
-  // 保存ボタンに強制入力用の処理をセット
   document.getElementById('waste-save-btn').onclick = function(){
     const logs = DB.get('waste-logs') || {};
     logs[dateStr] = {
@@ -964,9 +961,8 @@ function forceWasteInput(dateStr){
       other:  parseInt(document.getElementById('w-other').value)||0,
     };
     DB.set('waste-logs', logs);
-    modal.classList.add('hidden');
+    wasteModalClose();
     updatePreviews();
-    // まだ未入力があれば再チェック
     checkUnfilledWaste();
   };
 }
@@ -2047,7 +2043,7 @@ function showWasteInput(){
       el.appendChild(o);
     }
   });
-  document.getElementById('modal-waste').classList.remove('hidden');
+  wasteModalOpen();
   document.getElementById('waste-save-btn').onclick = saveWaste;
   document.getElementById('waste-cancel-btn').style.display = 'block';
 }
@@ -2064,13 +2060,21 @@ function saveWaste(){
     other:  parseInt(document.getElementById('w-other').value)||0,
   };
   DB.set('waste-logs', logs);
-  // 確実にモーダルを閉じる
-  const modal = document.getElementById('modal-waste');
-  modal.classList.add('hidden');
-  modal.style.display = 'none';
-  setTimeout(() => { modal.style.display = ''; }, 100);
+  wasteModalClose();
   renderWasteScreen();
   updatePreviews();
+}
+
+function wasteModalClose(){
+  const modal = document.getElementById('modal-waste');
+  modal.style.display = 'none';
+  modal.classList.add('hidden');
+}
+
+function wasteModalOpen(){
+  const modal = document.getElementById('modal-waste');
+  modal.style.display = '';
+  modal.classList.remove('hidden');
 }
 
 function scheduleWasteNotification(){
