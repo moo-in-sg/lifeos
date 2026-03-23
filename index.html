@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LIFE OS">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>LIFE OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --surface: #1e1e2e;
+    --border: #2a2a3e;
+    --accent: #c8a97e;
+    --accent2: #7e9cc8;
+    --accent3: #c87e9c;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --text3: #5a5a72;
+    --danger: #c87e7e;
+    --success: #7ec8a0;
+    --today: #c8a97e22;
+    --past: #ffffff08;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Noto Serif JP', serif; }
+
+  /* ===== SPLASH SCREEN ===== */
+  #splash {
+    position:fixed; inset:0; z-index:1000;
+    background: var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 32px;
+    background-image: radial-gradient(ellipse at 20% 20%, #c8a97e0a 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, #7e9cc80a 0%, transparent 60%);
+  }
+  #splash.hidden { display:none; }
+  .splash-logo {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:14px; letter-spacing:8px;
+    color:var(--text3); margin-bottom:48px;
+  }
+  .splash-quote-block {
+    width:100%; max-width:360px;
+    border-left:2px solid var(--accent);
+    padding-left:20px; margin-bottom:32px;
+  }
+  .splash-quote {
+    font-family:'Noto Serif JP', serif;
+    font-size:20px; font-weight:700; line-height:1.5;
+    color:var(--text); margin-bottom:16px;
+    letter-spacing:0.05em;
+  }
+  .splash-quote-en {
+    font-family:'Space Mono', monospace;
+    font-size:11px; color:var(--accent); letter-spacing:0.1em;
+    margin-bottom:16px; line-height:1.6;
+  }
+  .splash-desc {
+    font-size:13px; color:var(--text2); line-height:1.8;
+    font-weight:300;
+  }
+  .splash-btn {
+    margin-top:48px;
+    width:100%; max-width:360px;
+    padding:18px; border:1px solid var(--accent);
+    background:transparent; color:var(--accent);
+    font-family:'Noto Serif JP', serif; font-size:14px; letter-spacing:3px;
+    cursor:pointer; position:relative; overflow:hidden;
+    transition:all 0.3s;
+  }
+  .splash-btn::before {
+    content:''; position:absolute; inset:0;
+    background:var(--accent); transform:scaleX(0); transform-origin:left;
+    transition:transform 0.3s; z-index:-1;
+  }
+  .splash-btn:active::before { transform:scaleX(1); }
+  .splash-btn:active { color:var(--bg); }
+
+  /* ===== MAIN APP ===== */
+  #app { position:fixed; inset:0; display:flex; flex-direction:column; }
+  #app.hidden { display:none; }
+
+  .app-header {
+    padding: 52px 20px 16px;
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .app-header h1 {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:24px; letter-spacing:6px; color:var(--accent);
+  }
+  .app-header .date-str {
+    font-family:'Space Mono', monospace;
+    font-size:10px; color:var(--text3); letter-spacing:2px; margin-top:2px;
+  }
+
+  /* ===== GRID ===== */
+  .grid {
+    flex:1; overflow-y:auto;
+    padding:16px; display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;
+    gap:12px;
+  }
+  .grid-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:4px;
+    display:flex; flex-direction:column;
+    overflow:hidden; cursor:pointer;
+    position:relative;
+    transition:border-color 0.2s;
+    min-height:160px;
+  }
+  .grid-card:active { border-color:var(--accent); }
+  .card-accent-line {
+    height:2px; width:100%;
+    flex-shrink:0;
+  }
+  .card-accent-line.gold { background:var(--accent); }
+  .card-accent-line.blue { background:var(--accent2); }
+  .card-accent-line.pink { background:var(--accent3); }
+  .card-accent-line.green { background:var(--success); }
+  .card-body { padding:16px; flex:1; display:flex; flex-direction:column; }
+  .card-label {
+    font-family:'Space Mono', monospace;
+    font-size:9px; letter-spacing:3px; color:var(--text3);
+    margin-bottom:8px; text-transform:uppercase;
+  }
+  .card-title {
+    font-size:15px; font-weight:700; color:var(--text);
+    line-height:1.3; margin-bottom:auto;
+  }
+  .card-preview {
+    margin-top:12px; font-size:11px; color:var(--text2); line-height:1.6;
+    font-family:'Space Mono', monospace;
+  }
+  .card-icon {
+    font-size:32px; opacity:0.15; position:absolute;
+    bottom:12px; right:12px;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    position:fixed; inset:0; z-index:100;
+    background:var(--bg); display:flex; flex-direction:column;
+    transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .screen.active { transform:translateX(0); }
+
+  .screen-header {
+    padding:52px 16px 12px;
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+    flex-shrink:0; position:relative;
+  }
+  .back-btn {
+    width:36px; height:36px; background:none; border:1px solid var(--border);
+    border-radius:2px; color:var(--text2); font-size:18px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .screen-title {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:20px; letter-spacing:4px; color:var(--text); flex:1;
+  }
+  .icon-btn {
+    width:36px; height:36px; background:none; border:1px solid var(--border);
+    border-radius:2px; color:var(--text2); font-size:16px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .screen-body { flex:1; overflow-y:auto; overflow-x:hidden; }
+
+  /* ===== SCHEDULE ===== */
+  .cal-wrapper { display:flex; flex-direction:column; height:100%; }
+  .cal-header {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .cal-day-header {
+    padding:8px 4px; text-align:center;
+    border-right:1px solid var(--border);
+    font-family:'Space Mono', monospace;
+  }
+  .cal-day-header:last-child { border-right:none; }
+  .cal-day-header .yr { font-size:9px; color:var(--text3); }
+  .cal-day-header .mo { font-size:9px; color:var(--text3); }
+  .cal-day-header .dy {
+    font-size:13px; font-weight:700;
+    font-family:'Bebas Neue', sans-serif; letter-spacing:1px;
+  }
+  .cal-day-header.today .dy { color:var(--accent); }
+  .cal-day-header.past { opacity:0.4; }
+
+  .cal-nav {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+  }
+  .cal-nav button {
+    background:none; border:1px solid var(--border); color:var(--text2);
+    padding:6px 16px; font-size:12px; cursor:pointer; border-radius:2px;
+    font-family:'Space Mono', monospace;
+  }
+  .cal-nav .nav-label {
+    font-family:'Space Mono', monospace; font-size:10px; color:var(--text3);
+  }
+
+  .cal-body { flex:1; overflow-y:auto; overflow-x:hidden; }
+  .cal-grid {
+    display:grid; grid-template-columns:36px repeat(3,1fr);
+    min-width:0;
+  }
+  .time-cell {
+    padding:0 4px; height:32px; display:flex; align-items:flex-start;
+    justify-content:flex-end; padding-top:2px;
+    font-family:'Space Mono', monospace; font-size:9px; color:var(--text3);
+    border-right:1px solid var(--border);
+    position:relative;
+  }
+  .time-cell.hour { color:var(--text2); font-size:10px; }
+  .time-cell.hour::after {
+    content:''; position:absolute; right:0; top:0;
+    width:200vw; height:1px; background:var(--border);
+    pointer-events:none;
+  }
+  .slot-cell {
+    height:32px; border-right:1px solid var(--border);
+    border-bottom:1px solid #ffffff05;
+    position:relative; cursor:pointer;
+  }
+  .slot-cell:last-child { border-right:none; }
+  .slot-cell.today-col { background:var(--today); }
+  .slot-cell.past-col { background:var(--past); }
+
+  .task-block {
+    position:absolute; left:1px; right:1px; top:1px;
+    border-radius:2px; padding:2px 6px;
+    font-size:10px; overflow:hidden;
+    display:flex; align-items:center; gap:4px;
+    z-index:10; cursor:pointer;
+  }
+  .task-block input[type=checkbox] { flex-shrink:0; width:12px; height:12px; accent-color:var(--accent); }
+  .task-block span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-family:'Noto Serif JP'; }
+
+  /* ===== TASK MANAGEMENT ===== */
+  .task-list { padding:12px; }
+  .task-item {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:4px; padding:14px; margin-bottom:10px;
+    position:relative;
+  }
+  .task-item-name { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .task-item-meta {
+    font-family:'Space Mono', monospace; font-size:10px;
+    color:var(--text2); line-height:1.8;
+  }
+  .task-item-tag {
+    display:inline-block; padding:2px 8px; border-radius:2px;
+    font-size:9px; font-family:'Space Mono'; letter-spacing:1px;
+    margin-top:6px;
+  }
+  .tag-recurring { background:#7e9cc822; color:var(--accent2); border:1px solid var(--accent2)44; }
+  .tag-spot { background:#c8a97e22; color:var(--accent); border:1px solid var(--accent)44; }
+
+  /* ===== MODAL / FORM ===== */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:200;
+    background:#00000088; display:flex; align-items:flex-end;
+  }
+  .modal-overlay.hidden { display:none; }
+  .modal-sheet {
+    width:100%; background:var(--bg2);
+    border-top:1px solid var(--border);
+    border-radius:12px 12px 0 0;
+    padding:20px; max-height:85vh; overflow-y:auto;
+  }
+  .modal-title {
+    font-family:'Bebas Neue', sans-serif; font-size:18px;
+    letter-spacing:3px; margin-bottom:20px; color:var(--accent);
+  }
+  .form-group { margin-bottom:16px; }
+  .form-label {
+    font-family:'Space Mono', monospace; font-size:10px;
+    color:var(--text3); letter-spacing:2px; margin-bottom:6px; display:block;
+  }
+  .form-input {
+    width:100%; background:var(--bg3); border:1px solid var(--border);
+    color:var(--text); padding:10px 12px; font-family:'Noto Serif JP'; font-size:14px;
+    border-radius:2px; outline:none;
+  }
+  .form-input:focus { border-color:var(--accent); }
+  .form-input:disabled { opacity:0.3; }
+  .form-row { display:flex; gap:10px; }
+  .form-row .form-group { flex:1; }
+  .checkbox-row {
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; color:var(--text2); margin-top:6px;
+  }
+  .checkbox-row input { accent-color:var(--accent); width:16px; height:16px; }
+  .weekday-row { display:flex; gap:6px; flex-wrap:wrap; }
+  .wd-btn {
+    padding:6px 10px; border:1px solid var(--border);
+    background:none; color:var(--text2); font-size:11px;
+    border-radius:2px; cursor:pointer; font-family:'Space Mono';
+  }
+  .wd-btn.active { background:var(--accent); border-color:var(--accent); color:var(--bg); }
+  .wd-btn:disabled { opacity:0.2; cursor:not-allowed; }
+  .btn-primary {
+    width:100%; padding:14px; background:var(--accent);
+    border:none; color:var(--bg); font-family:'Noto Serif JP';
+    font-size:14px; font-weight:700; letter-spacing:2px;
+    cursor:pointer; border-radius:2px; margin-top:8px;
+  }
+  .btn-secondary {
+    width:100%; padding:12px; background:none;
+    border:1px solid var(--border); color:var(--text2);
+    font-family:'Noto Serif JP'; font-size:13px;
+    cursor:pointer; border-radius:2px; margin-top:8px;
+  }
+
+  /* ===== STREAK SCREEN ===== */
+  .streak-list { padding:12px; }
+  .streak-item {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:4px; padding:14px; margin-bottom:10px;
+  }
+  .streak-name { font-size:14px; font-weight:700; margin-bottom:10px; }
+  .streak-stats { display:flex; gap:8px; flex-wrap:wrap; }
+  .streak-stat {
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:2px; padding:8px 12px; flex:1; min-width:80px;
+    text-align:center;
+  }
+  .streak-stat-val {
+    font-family:'Bebas Neue', sans-serif; font-size:22px;
+    color:var(--accent); line-height:1;
+  }
+  .streak-stat-label {
+    font-family:'Space Mono', monospace; font-size:9px;
+    color:var(--text3); letter-spacing:1px; margin-top:4px;
+  }
+  .streak-bar {
+    height:4px; background:var(--bg3); border-radius:2px;
+    margin-top:10px; overflow:hidden;
+  }
+  .streak-bar-fill { height:100%; background:var(--accent); border-radius:2px; transition:width 0.5s; }
+
+  /* ===== LIFE PLAN ===== */
+  .life-countdown {
+    padding:20px 16px;
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border-bottom:1px solid var(--border);
+    text-align:center;
+  }
+  .life-cd-title {
+    font-family:'Space Mono', monospace; font-size:9px;
+    color:var(--text3); letter-spacing:3px; margin-bottom:12px;
+  }
+  .life-cd-nums {
+    display:flex; justify-content:center; gap:8px; flex-wrap:wrap;
+  }
+  .cd-unit {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:2px; padding:8px 10px; min-width:56px; text-align:center;
+  }
+  .cd-val {
+    font-family:'Bebas Neue', sans-serif; font-size:26px;
+    color:var(--accent); line-height:1; display:block;
+  }
+  .cd-label {
+    font-family:'Space Mono', monospace; font-size:8px;
+    color:var(--text3); letter-spacing:1px; margin-top:2px; display:block;
+  }
+
+  .life-events { padding:12px; }
+  .life-event-item {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:4px; padding:14px; margin-bottom:10px;
+    position:relative; overflow:hidden;
+  }
+  .life-event-item::before {
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width:3px; background:var(--accent);
+  }
+  .life-event-name { font-size:14px; font-weight:700; margin-bottom:4px; padding-left:10px; }
+  .life-event-date {
+    font-family:'Space Mono', monospace; font-size:10px;
+    color:var(--text2); margin-bottom:10px; padding-left:10px;
+  }
+  .life-event-cd {
+    display:flex; gap:6px; flex-wrap:wrap; padding-left:10px;
+  }
+  .life-event-cd-unit {
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:2px; padding:4px 8px; text-align:center;
+  }
+  .life-event-cd-val {
+    font-family:'Bebas Neue', sans-serif; font-size:18px;
+    color:var(--accent2); line-height:1; display:block;
+  }
+  .life-event-cd-label {
+    font-family:'Space Mono', monospace; font-size:8px;
+    color:var(--text3); display:block; margin-top:1px;
+  }
+  .life-event-passed {
+    opacity:0.5;
+  }
+  .life-event-passed::before { background:var(--text3); }
+
+  /* ===== LIFE UNIT SELECTOR ===== */
+  .life-unit-selector {
+    display:flex; gap:6px; justify-content:center;
+    margin-bottom:16px; flex-wrap:wrap;
+  }
+  .unit-btn {
+    padding:5px 12px; border:1px solid var(--border);
+    background:none; color:var(--text3);
+    font-family:'Space Mono', monospace; font-size:10px; letter-spacing:1px;
+    border-radius:2px; cursor:pointer; transition:all 0.2s;
+  }
+  .unit-btn.active {
+    background:var(--accent); border-color:var(--accent);
+    color:var(--bg); font-weight:700;
+  }
+  .life-cd-single {
+    text-align:center;
+  }
+  .life-cd-big-val {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:56px; color:var(--accent); line-height:1;
+    letter-spacing:2px; display:block;
+  }
+  .life-cd-big-label {
+    font-family:'Space Mono', monospace;
+    font-size:10px; color:var(--text3); letter-spacing:3px;
+    margin-top:4px; display:block;
+  }
+  .life-event-cd-single {
+    padding-left:10px; margin-top:8px;
+  }
+  .life-event-cd-big-val {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:32px; color:var(--accent2); line-height:1; display:block;
+  }
+  .life-event-cd-big-label {
+    font-family:'Space Mono', monospace;
+    font-size:9px; color:var(--text3); letter-spacing:2px;
+    margin-top:2px; display:block;
+  }
+
+  /* ===== TASK POPUP ===== */
+  .task-popup {
+    position:fixed; inset:0; z-index:300;
+    background:#00000088; display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .task-popup.hidden { display:none; }
+  .task-popup-inner {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:4px; padding:20px; width:100%; max-width:320px;
+  }
+  .task-popup-name { font-size:16px; font-weight:700; margin-bottom:8px; }
+  .task-popup-content { font-size:13px; color:var(--text2); line-height:1.8; margin-bottom:16px; }
+  .task-popup-meta { font-family:'Space Mono', monospace; font-size:10px; color:var(--text3); line-height:1.8; }
+
+  /* ===== SETTINGS ===== */
+  .settings-sheet { padding:20px; }
+  .settings-group { margin-bottom:24px; }
+  .settings-group-title {
+    font-family:'Space Mono', monospace; font-size:10px;
+    color:var(--text3); letter-spacing:3px; margin-bottom:12px;
+    text-transform:uppercase;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:2px; height:2px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">LIFE OS · v1.0</div>
+  <div class="splash-quote-block">
+    <div class="splash-quote" id="sq-main"></div>
+    <div class="splash-quote-en" id="sq-source"></div>
+    <div class="splash-desc" id="sq-desc"></div>
+  </div>
+  <button class="splash-btn" onclick="enterApp()">今日も全力で人生を過ごそう</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+  <div class="app-header">
+    <h1>LIFE OS</h1>
+    <div class="date-str" id="header-date"></div>
+  </div>
+  <div class="grid">
+    <div class="grid-card" onclick="openScreen('schedule')">
+      <div class="card-accent-line gold"></div>
+      <div class="card-body">
+        <div class="card-label">01 / SCHEDULE</div>
+        <div class="card-title">スケジュール</div>
+        <div class="card-preview" id="preview-schedule">今日のタスクを確認</div>
+      </div>
+      <div class="card-icon">📅</div>
+    </div>
+    <div class="grid-card" onclick="openScreen('tasks')">
+      <div class="card-accent-line blue"></div>
+      <div class="card-body">
+        <div class="card-label">02 / TASKS</div>
+        <div class="card-title">タスク管理<br><span style="font-size:11px;color:var(--text2)">(期限・進捗)</span></div>
+        <div class="card-preview" id="preview-tasks">登録タスクを管理</div>
+      </div>
+      <div class="card-icon">⚡</div>
+    </div>
+    <div class="grid-card" onclick="openScreen('streak')">
+      <div class="card-accent-line green"></div>
+      <div class="card-body">
+        <div class="card-label">03 / STREAK</div>
+        <div class="card-title">継続実績</div>
+        <div class="card-preview" id="preview-streak">継続を可視化</div>
+      </div>
+      <div class="card-icon">🔥</div>
+    </div>
+    <div class="grid-card" onclick="openScreen('life')">
+      <div class="card-accent-line pink"></div>
+      <div class="card-body">
+        <div class="card-label">04 / LIFE</div>
+        <div class="card-title">人生計画表</div>
+        <div class="card-preview" id="preview-life">残り時間を意識する</div>
+      </div>
+      <div class="card-icon">⏳</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE SCREEN -->
+<div class="screen" id="screen-schedule">
+  <div class="screen-header">
+    <button class="back-btn" onclick="closeScreen('schedule')">←</button>
+    <div class="screen-title">SCHEDULE</div>
+    <button class="icon-btn" onclick="showScheduleSettings()">⚙</button>
+  </div>
+  <div class="screen-body">
+    <div class="cal-wrapper" id="cal-wrapper">
+      <div class="cal-nav">
+        <button onclick="shiftDay(-1)">← PREV</button>
+        <span class="nav-label" id="cal-nav-label"></span>
+        <button onclick="shiftDay(1)">NEXT →</button>
+      </div>
+      <div class="cal-header" id="cal-header"></div>
+      <div class="cal-body">
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS SCREEN -->
+<div class="screen" id="screen-tasks">
+  <div class="screen-header">
+    <button class="back-btn" onclick="closeScreen('tasks')">←</button>
+    <div class="screen-title">TASKS</div>
+    <button class="icon-btn" onclick="showTaskSettings()">⚙</button>
+    <button class="icon-btn" onclick="showAddTask()" style="color:var(--accent);border-color:var(--accent)">＋</button>
+  </div>
+  <div class="screen-body">
+    <div class="task-list" id="task-list"></div>
+  </div>
+</div>
+
+<!-- STREAK SCREEN -->
+<div class="screen" id="screen-streak">
+  <div class="screen-header">
+    <button class="back-btn" onclick="closeScreen('streak')">←</button>
+    <div class="screen-title">STREAK</div>
+  </div>
+  <div class="screen-body">
+    <div class="streak-list" id="streak-list"></div>
+  </div>
+</div>
+
+<!-- LIFE SCREEN -->
+<div class="screen" id="screen-life">
+  <div class="screen-header">
+    <button class="back-btn" onclick="closeScreen('life')">←</button>
+    <div class="screen-title">LIFE PLAN</div>
+    <button class="icon-btn" onclick="showLifeSettings()">⚙</button>
+    <button class="icon-btn" onclick="showAddEvent()" style="color:var(--accent3);border-color:var(--accent3)">＋</button>
+  </div>
+  <div class="screen-body">
+    <div class="life-countdown" id="life-countdown-area">
+      <div class="life-cd-title">REMAINING LIFE</div>
+      <div class="life-unit-selector" id="life-unit-selector">
+        <button class="unit-btn" data-unit="months" onclick="setLifeUnit('months')">月</button>
+        <button class="unit-btn" data-unit="weeks" onclick="setLifeUnit('weeks')">週</button>
+        <button class="unit-btn active" data-unit="days" onclick="setLifeUnit('days')">日</button>
+        <button class="unit-btn" data-unit="hours" onclick="setLifeUnit('hours')">時間</button>
+        <button class="unit-btn" data-unit="minutes" onclick="setLifeUnit('minutes')">分</button>
+        <button class="unit-btn" data-unit="seconds" onclick="setLifeUnit('seconds')">秒</button>
+      </div>
+      <div class="life-cd-single" id="life-cd-nums">
+        <div style="font-family:'Space Mono';font-size:11px;color:var(--text3);padding:20px">
+          設定から生年月日・寿命を入力してください
+        </div>
+      </div>
+    </div>
+    <div class="life-events" id="life-events"></div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay hidden" id="modal-task">
+  <div class="modal-sheet">
+    <div class="modal-title" id="t-modal-title">NEW TASK</div>
+    <div class="form-group">
+      <label class="form-label">タスク名称（カレンダー表示用）</label>
+      <input class="form-input" id="t-name" type="text" placeholder="例：英語学習">
+    </div>
+    <div class="form-group">
+      <label class="form-label">具体タスク内容（タップで表示）</label>
+      <textarea class="form-input" id="t-content" rows="3" placeholder="具体的な内容を記載" style="resize:none"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">開始日</label>
+        <input class="form-input" id="t-start" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">終了日</label>
+        <input class="form-input" id="t-end" type="date">
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="t-noend" onchange="toggleNoEnd(this)">
+      <label for="t-noend">終了期限なし（継続タスク）</label>
+    </div>
+    <div class="form-row" style="margin-top:12px">
+      <div class="form-group">
+        <label class="form-label">開始時刻</label>
+        <select class="form-input" id="t-starttime"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所要時間</label>
+        <select class="form-input" id="t-duration"></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:4px">
+      <label class="form-label">実施曜日（期間タスクのみ）</label>
+      <div class="weekday-row" id="wd-row">
+        <button class="wd-btn" data-d="0" onclick="toggleWD(this)" disabled>日</button>
+        <button class="wd-btn" data-d="1" onclick="toggleWD(this)" disabled>月</button>
+        <button class="wd-btn" data-d="2" onclick="toggleWD(this)" disabled>火</button>
+        <button class="wd-btn" data-d="3" onclick="toggleWD(this)" disabled>水</button>
+        <button class="wd-btn" data-d="4" onclick="toggleWD(this)" disabled>木</button>
+        <button class="wd-btn" data-d="5" onclick="toggleWD(this)" disabled>金</button>
+        <button class="wd-btn" data-d="6" onclick="toggleWD(this)" disabled>土</button>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="t-notify">
+      <label for="t-notify">開始時刻に通知する</label>
+    </div>
+    <button class="btn-primary" onclick="saveTask()">保存する</button>
+    <button class="btn-secondary" id="t-delete-btn" onclick="deleteTaskFromModal()" style="display:none;color:var(--danger);border-color:var(--danger)">このタスクを削除</button>
+    <button class="btn-secondary" onclick="closeModal('modal-task')">キャンセル</button>
+  </div>
+</div>
+
+<!-- ADD LIFE EVENT MODAL -->
+<div class="modal-overlay hidden" id="modal-life-event">
+  <div class="modal-sheet">
+    <div class="modal-title" id="le-modal-title">NEW MILESTONE</div>
+    <div class="form-group">
+      <label class="form-label">イベント名</label>
+      <input class="form-input" id="le-name" type="text" placeholder="例：リタイア">
+    </div>
+    <div class="form-group">
+      <label class="form-label">目標日</label>
+      <div class="form-row" style="gap:8px;margin-bottom:8px;align-items:center">
+        <select class="form-input" id="le-age" onchange="applyAgeToDate()" style="flex:1">
+          <option value="">年齢から入力</option>
+        </select>
+        <span style="font-family:Space Mono;font-size:9px;color:var(--text3);flex-shrink:0">歳時点</span>
+      </div>
+      <div class="form-row" style="gap:8px">
+        <div class="form-group" style="flex:2">
+          <select class="form-input" id="le-year" onchange="updateLeDay();clearAgeSelect()"></select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <select class="form-input" id="le-month" onchange="updateLeDay();clearAgeSelect()"></select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <select class="form-input" id="le-day" onchange="clearAgeSelect()"></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;font-family:Space Mono;font-size:9px;color:var(--text3);padding:0 2px;margin-top:-8px">
+        <span style="flex:2">年</span><span style="flex:1">月</span><span style="flex:1">日</span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveLifeEvent()">保存する</button>
+    <button class="btn-secondary" id="le-delete-btn" onclick="deleteLifeEventFromModal()" style="display:none;color:var(--danger);border-color:var(--danger)">このイベントを削除</button>
+    <button class="btn-secondary" onclick="closeModal('modal-life-event')">キャンセル</button>
+  </div>
+</div>
+
+<!-- LIFE SETTINGS MODAL -->
+<div class="modal-overlay hidden" id="modal-life-settings">
+  <div class="modal-sheet">
+    <div class="modal-title">LIFE SETTINGS</div>
+    <div class="form-group">
+      <label class="form-label">生年月日</label>
+      <div class="form-row" style="gap:8px">
+        <div class="form-group" style="flex:2">
+          <select class="form-input" id="ls-birth-y" onchange="updateBirthDays()"></select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <select class="form-input" id="ls-birth-m" onchange="updateBirthDays()"></select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <select class="form-input" id="ls-birth-d"></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;font-family:Space Mono;font-size:9px;color:var(--text3);padding:0 2px;margin-top:-8px">
+        <span style="flex:2">年</span><span style="flex:1">月</span><span style="flex:1">日</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">想定寿命（歳）</label>
+      <select class="form-input" id="ls-lifespan"></select>
+    </div>
+    <button class="btn-primary" onclick="saveLifeSettings()">保存する</button>
+    <button class="btn-secondary" onclick="closeModal('modal-life-settings')">キャンセル</button>
+  </div>
+</div>
+
+<!-- LIFESPAN EDIT MODAL -->
+<div class="modal-overlay hidden" id="modal-lifespan-edit">
+  <div class="modal-sheet">
+    <div class="modal-title">想定寿命を変更</div>
+    <div class="form-group">
+      <label class="form-label">想定寿命（歳）</label>
+      <select class="form-input" id="lse-lifespan"></select>
+    </div>
+    <button class="btn-primary" onclick="saveLifespanEdit()">保存する</button>
+    <button class="btn-secondary" onclick="closeModal('modal-lifespan-edit')">キャンセル</button>
+  </div>
+</div>
+
+<!-- TASK POPUP -->
+<div class="task-popup hidden" id="task-popup">
+  <div class="task-popup-inner">
+    <div class="task-popup-name" id="tp-name"></div>
+    <div class="task-popup-content" id="tp-content"></div>
+    <div class="task-popup-meta" id="tp-meta"></div>
+    <button class="btn-secondary" style="margin-top:16px" onclick="closeTaskPopup()">閉じる</button>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const DB = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const QUOTES = [
+  { main:'天行健、君子以自彊不息', source:'— 易経', desc:'天は一瞬も止まらず回り続ける。君もまた、立ち止まることなく前へ進め。休息は許されるが、諦めは許されない。' },
+  { main:'疾風に勁草を知る', source:'— 後漢書', desc:'困難に晒されて初めて、自分の本質が明らかになる。今日の負荷は、明日の自分を証明するための試練だ。' },
+  { main:'"If today were the last day of my life, would I want to do what I\'m about to do today?"', source:'— Steve Jobs, Stanford 2005', desc:'毎朝鏡の前でこの問いを立て続けた男は、世界を変えた。あなたは今日、その問いに何と答えるか。' },
+  { main:'Memento mori — 死を忘れるな', source:'— ラテン語格言', desc:'死を意識することは、絶望ではなく覚醒だ。残り時間は有限である。今この瞬間に何をするかが、人生の密度を決める。' },
+  { main:'一日一生', source:'— 吉田松陰的文脈', desc:'今日という一日は、二度と来ない。この24時間を一つの人生だと思って生きたとき、何を優先すべきかが見えてくる。' },
+  { main:'Nusquam est qui ubique est', source:'— Seneca', desc:'どこにでもいる者は、どこにもいない。何にでも手を出す者は、何も成し遂げない。あなたが本当に追うべきものは何か。' },
+  { main:'為せば成る、為さねば成らぬ何事も', source:'— 上杉鷹山', desc:'才能でも運でもない。やったかやらなかったか。それだけが結果を分ける。言い訳の数だけ、人生は縮む。' },
+  { main:'Tempus fugit — 時は飛ぶ', source:'— ラテン語格言', desc:'時間は待たない。貯めることも、取り戻すこともできない。使い方だけが、あなたに委ねられている唯一の自由だ。' },
+  { main:'志を立てるに、遅すぎるということはない', source:'— 吉田松陰', desc:'今日気づいたなら、今日が始まりだ。過去を悔やむ時間さえ、前進のエネルギーに変えられる。' },
+  { main:'人生とは、今日一日のことである', source:'— Dale Carnegie', desc:'昨日は記録であり、明日は仮説だ。動かせるのは今日だけ。あなたの人生は、今日の積み重ねでしか作られない。' }
+];
+
+// ===== STATE =====
+let calOffset = 0; // days from today shown as center
+let lifeTimer = null;
+
+// ===== SPLASH =====
+(function initSplash(){
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('sq-main').textContent = q.main;
+  document.getElementById('sq-source').textContent = q.source;
+  document.getElementById('sq-desc').textContent = q.desc;
+})();
+
+function enterApp(){
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  updateHeaderDate();
+  updatePreviews();
+  requestNotificationPermission();
+}
+
+// ===== HEADER =====
+function updateHeaderDate(){
+  const d = new Date();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('header-date').textContent =
+    `${d.getFullYear()} · ${String(d.getMonth()+1).padStart(2,'0')} · ${String(d.getDate()).padStart(2,'0')} · ${days[d.getDay()]}`;
+}
+
+// ===== PREVIEWS =====
+function updatePreviews(){
+  const tasks = DB.get('tasks') || [];
+  const today = todayStr();
+  const todayTasks = tasks.filter(t => isTaskActiveOnDate(t, today));
+  document.getElementById('preview-tasks').textContent = `登録中: ${tasks.length}件`;
+  document.getElementById('preview-schedule').textContent = `今日: ${todayTasks.length}件のタスク`;
+  updateStreakPreview();
+  updateLifePreview();
+}
+
+function updateStreakPreview(){
+  const tasks = DB.get('tasks') || [];
+  const recurring = tasks.filter(t=>!t.noEnd || t.startDate !== t.endDate);
+  document.getElementById('preview-streak').textContent = `追跡中: ${recurring.length}件`;
+}
+
+function updateLifePreview(){
+  const settings = DB.get('life-settings');
+  if(!settings){ return; }
+  const events = (DB.get('life-events') || []).filter(e=>new Date(e.date) > new Date());
+  document.getElementById('preview-life').textContent = `目標: ${events.length}件`;
+}
+
+// ===== SCREEN NAV =====
+function openScreen(name){
+  document.getElementById('screen-'+name).classList.add('active');
+  if(name==='schedule') renderCalendar();
+  if(name==='tasks') renderTaskList();
+  if(name==='streak') renderStreak();
+  if(name==='life') { renderLifePlan(); startLifeTimer(); }
+}
+
+function closeScreen(name){
+  document.getElementById('screen-'+name).classList.remove('active');
+  if(name==='life' && lifeTimer){ clearInterval(lifeTimer); lifeTimer=null; }
+  updatePreviews();
+}
+
+// ===== CALENDAR =====
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function dateStrAdd(base, days){
+  const d = new Date(base+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function shiftDay(dir){
+  calOffset += dir;
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const today = todayStr();
+  const center = dateStrAdd(today, calOffset);
+  const dates = [dateStrAdd(center,-1), center, dateStrAdd(center,1)];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // nav label
+  document.getElementById('cal-nav-label').textContent =
+    calOffset===0 ? 'TODAY CENTER' : (calOffset>0?`+${calOffset}d`:calOffset+'d');
+
+  // header
+  const hdr = document.getElementById('cal-header');
+  hdr.innerHTML='';
+  dates.forEach((ds,i)=>{
+    const d = new Date(ds+'T00:00:00');
+    const isToday = ds===today;
+    const isPast = ds<today;
+    const prevDs = i>0?dates[i-1]:null;
+    const prevD = prevDs?new Date(prevDs+'T00:00:00'):null;
+
+    const cell = document.createElement('div');
+    cell.className='cal-day-header'+(isToday?' today':'')+(isPast?' past':'');
+
+    const showYr = !prevD || prevD.getFullYear()!==d.getFullYear();
+    const showMo = !prevD || prevD.getMonth()!==d.getMonth() || showYr;
+
+    cell.innerHTML=`
+      <div class="yr">${showYr?d.getFullYear():''}</div>
+      <div class="mo">${showMo?(d.getMonth()+1)+'月':''}</div>
+      <div class="dy">${d.getDate()}(${dayNames[d.getDay()]})</div>
+    `;
+    hdr.appendChild(cell);
+  });
+
+  // grid
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const tasks = DB.get('tasks')||[];
+  const checks = DB.get('checks')||{};
+
+  // Generate time slots 6:00 to 26:00 (02:00 next day) in 15min intervals
+  const slots=[];
+  for(let h=6;h<26;h++){
+    for(let m=0;m<60;m+=15){
+      const hDisplay = h>=24?h-24:h;
+      slots.push({h,m,hDisplay,label:h%1===0&&m===0?`${String(hDisplay).padStart(2,'0')}`:( m===0?String(hDisplay).padStart(2,'0'):'')});
+    }
+  }
+
+  // For each slot row, create time cell + 3 day cells
+  // First pass: build task blocks per column
+  const taskBlocks = [new Map(), new Map(), new Map()]; // slotIdx -> task
+  dates.forEach((ds,ci)=>{
+    const d = new Date(ds+'T00:00:00');
+    const dayOfWeek = d.getDay();
+    const dayTasks = tasks.filter(t=>isTaskActiveOnDate(t,ds));
+    dayTasks.forEach(t=>{
+      const startSlot = timeToSlotIdx(t.startTime);
+      const dur = parseInt(t.duration)||15;
+      const slotCount = dur/15;
+      for(let s=0;s<slotCount;s++){
+        if(!taskBlocks[ci].has(startSlot+s)){
+          taskBlocks[ci].set(startSlot+s, {task:t, isFirst:s===0, remaining:slotCount-s});
+        }
+      }
+    });
+  });
+
+  slots.forEach((slot,si)=>{
+    // time cell
+    const tc=document.createElement('div');
+    tc.className='time-cell'+(slot.m===0?' hour':'');
+    tc.textContent=slot.m===0?`${String(slot.hDisplay).padStart(2,'0')}`:' ';
+    grid.appendChild(tc);
+
+    // day cells
+    dates.forEach((ds,ci)=>{
+      const isPast=ds<today;
+      const isToday=ds===today;
+      const cell=document.createElement('div');
+      cell.className='slot-cell'+(isToday?' today-col':'')+(isPast?' past-col':'');
+
+      if(taskBlocks[ci].has(si)){
+        const {task,isFirst,remaining}=taskBlocks[ci].get(si);
+        if(isFirst){
+          const block=document.createElement('div');
+          block.className='task-block';
+          block.style.height=(32*remaining-2)+'px';
+          block.style.background=isPast?'#ffffff15':'#c8a97e33';
+          block.style.borderLeft='2px solid var(--accent)';
+
+          const checkKey=`${task.id}_${ds}_${slot.h}_${slot.m}`;
+          const cb=document.createElement('input');
+          cb.type='checkbox';
+          cb.checked=!!(checks[checkKey]);
+          cb.onclick=(e)=>{
+            e.stopPropagation();
+            const c=DB.get('checks')||{};
+            c[checkKey]=e.target.checked;
+            DB.set('checks',c);
+            updateStreakData(task.id, ds, e.target.checked);
+          };
+
+          const sp=document.createElement('span');
+          sp.textContent=task.name;
+
+          block.appendChild(cb);
+          block.appendChild(sp);
+          block.onclick=(e)=>{
+            if(e.target===cb)return;
+            showTaskPopup(task);
+          };
+          cell.appendChild(block);
+        }
+      }
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function timeToSlotIdx(timeStr){
+  if(!timeStr)return 0;
+  const[h,m]=timeStr.split(':').map(Number);
+  return (h-6)*4+(m/15);
+}
+
+function isTaskActiveOnDate(task, dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const start=new Date(task.startDate+'T00:00:00');
+  let end=task.noEnd?null:new Date(task.endDate+'T00:00:00');
+
+  if(d<start)return false;
+  if(end&&d>end)return false;
+
+  // spot task: only on start date
+  if(!task.noEnd && task.startDate===task.endDate) return dateStr===task.startDate;
+
+  // recurring: check weekday
+  if(task.weekdays&&task.weekdays.length>0){
+    return task.weekdays.includes(d.getDay());
+  }
+  return true;
+}
+
+// ===== TASK POPUP =====
+function showTaskPopup(task){
+  document.getElementById('tp-name').textContent=task.name;
+  document.getElementById('tp-content').textContent=task.content||'（詳細未記入）';
+  const isRecurring=task.noEnd||(task.startDate!==task.endDate);
+  document.getElementById('tp-meta').innerHTML=
+    `開始日: ${task.startDate}<br>`+
+    (task.noEnd?'終了: なし（継続）':` 終了日: ${task.endDate}`)+`<br>`+
+    `時刻: ${task.startTime} / 所要: ${task.duration}分<br>`+
+    (isRecurring&&task.weekdays?.length?`曜日: ${['日','月','火','水','木','金','土'].filter((_,i)=>task.weekdays.includes(i)).join(' ')}`:'')+
+    `<br>種別: ${isRecurring?'継続タスク':'スポットタスク'}`;
+  document.getElementById('task-popup').classList.remove('hidden');
+}
+
+function closeTaskPopup(){
+  document.getElementById('task-popup').classList.add('hidden');
+}
+
+// ===== TASK LIST =====
+function renderTaskList(){
+  const tasks=DB.get('tasks')||[];
+  const el=document.getElementById('task-list');
+  if(!tasks.length){
+    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-family:Space Mono;font-size:12px">タスクがありません<br>右上の + から追加してください</div>';
+    return;
+  }
+  el.innerHTML=tasks.map((t,i)=>{
+    const isRecurring=t.noEnd||(t.startDate!==t.endDate);
+    const wdLabels=['日','月','火','水','木','金','土'];
+    const wdStr=isRecurring&&t.weekdays?.length?t.weekdays.map(d=>wdLabels[d]).join(' '):'毎日';
+    return `<div class="task-item" onclick="editTask(${i})" style="cursor:pointer">
+      <div class="task-item-name">${t.name}</div>
+      <div class="task-item-meta">
+        ${t.startDate} ${isRecurring?'→ '+(t.noEnd?'∞':t.endDate):'（スポット）'}<br>
+        ${t.startTime} · ${t.duration}分<br>
+        ${isRecurring?wdStr:''}
+      </div>
+      <span class="task-item-tag ${isRecurring?'tag-recurring':'tag-spot'}">${isRecurring?'RECURRING':'SPOT'}</span>
+      <div style="position:absolute;top:12px;right:12px;font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:1px">編集</div>
+    </div>`;
+  }).join('');
+}
+
+function deleteTask(idx){
+  const tasks=DB.get('tasks')||[];
+  tasks.splice(idx,1);
+  DB.set('tasks',tasks);
+  renderTaskList();
+}
+
+// ===== ADD / EDIT TASK =====
+let editingTaskIdx = null;
+
+function populateTaskDropdowns(startTime, duration){
+  const ts=document.getElementById('t-starttime');
+  ts.innerHTML='';
+  for(let h=6;h<26;h++){
+    for(let m=0;m<60;m+=15){
+      const hd=h>=24?h-24:h;
+      const val=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const label=`${String(hd).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const opt=document.createElement('option');
+      opt.value=val; opt.textContent=label;
+      if(startTime?val===startTime:h===9&&m===0) opt.selected=true;
+      ts.appendChild(opt);
+    }
+  }
+  const ds=document.getElementById('t-duration');
+  ds.innerHTML='';
+  for(let m=15;m<=240;m+=15){
+    const opt=document.createElement('option');
+    opt.value=m; opt.textContent=`${m}分`;
+    if(duration?parseInt(duration)===m:m===60) opt.selected=true;
+    ds.appendChild(opt);
+  }
+}
+
+function showAddTask(){
+  editingTaskIdx = null;
+  document.getElementById('t-modal-title').textContent = 'NEW TASK';
+  document.getElementById('t-delete-btn').style.display = 'none';
+  const today=todayStr();
+  document.getElementById('t-name').value='';
+  document.getElementById('t-content').value='';
+  document.getElementById('t-start').value=today;
+  document.getElementById('t-end').value=today;
+  document.getElementById('t-noend').checked=false;
+  document.getElementById('t-end').disabled=false;
+  document.getElementById('t-notify').checked=false;
+  populateTaskDropdowns(null, null);
+  document.querySelectorAll('.wd-btn').forEach(b=>{ b.classList.remove('active'); b.disabled=true; });
+  document.getElementById('t-start').onchange=checkTaskType;
+  document.getElementById('t-end').onchange=checkTaskType;
+  document.getElementById('modal-task').classList.remove('hidden');
+}
+
+function editTask(idx){
+  const tasks=DB.get('tasks')||[];
+  const t=tasks[idx];
+  if(!t) return;
+  editingTaskIdx = idx;
+  document.getElementById('t-modal-title').textContent = 'EDIT TASK';
+  document.getElementById('t-delete-btn').style.display = 'block';
+  document.getElementById('t-name').value = t.name;
+  document.getElementById('t-content').value = t.content||'';
+  document.getElementById('t-start').value = t.startDate;
+  document.getElementById('t-noend').checked = !!t.noEnd;
+  document.getElementById('t-end').value = t.endDate||todayStr();
+  document.getElementById('t-end').disabled = !!t.noEnd;
+  document.getElementById('t-notify').checked = !!t.notify;
+  populateTaskDropdowns(t.startTime, t.duration);
+  const isRecurring = t.noEnd||(t.startDate!==t.endDate);
+  document.querySelectorAll('.wd-btn').forEach(b=>{
+    b.disabled = !isRecurring;
+    b.classList.toggle('active', isRecurring && (t.weekdays||[]).includes(parseInt(b.dataset.d)));
+  });
+  document.getElementById('t-start').onchange=checkTaskType;
+  document.getElementById('t-end').onchange=checkTaskType;
+  document.getElementById('modal-task').classList.remove('hidden');
+}
+
+function checkTaskType(){
+  const s=document.getElementById('t-start').value;
+  const e=document.getElementById('t-end').value;
+  const noEnd=document.getElementById('t-noend').checked;
+  const isRecurring=noEnd||(s&&e&&s!==e);
+  document.querySelectorAll('.wd-btn').forEach(b=>b.disabled=!isRecurring);
+}
+
+function toggleNoEnd(cb){
+  document.getElementById('t-end').disabled=cb.checked;
+  checkTaskType();
+}
+
+function toggleWD(btn){
+  if(btn.disabled)return;
+  btn.classList.toggle('active');
+}
+
+function saveTask(){
+  const name=document.getElementById('t-name').value.trim();
+  if(!name){ alert('タスク名を入力してください'); return; }
+  const startDate=document.getElementById('t-start').value;
+  const noEnd=document.getElementById('t-noend').checked;
+  const endDate=noEnd?null:document.getElementById('t-end').value;
+  const startTime=document.getElementById('t-starttime').value;
+  const duration=document.getElementById('t-duration').value;
+  const notify=document.getElementById('t-notify').checked;
+  const weekdays=[...document.querySelectorAll('.wd-btn.active')].map(b=>parseInt(b.dataset.d));
+  const content=document.getElementById('t-content').value.trim();
+  const tasks=DB.get('tasks')||[];
+
+  if(editingTaskIdx !== null){
+    const existingId = tasks[editingTaskIdx].id;
+    tasks[editingTaskIdx] = { id:existingId, name, content, startDate, endDate, noEnd, startTime, duration, weekdays, notify };
+  } else {
+    tasks.push({ id:Date.now(), name, content, startDate, endDate, noEnd, startTime, duration, weekdays, notify });
+  }
+
+  DB.set('tasks',tasks);
+  if(notify) scheduleNotification(tasks[editingTaskIdx!==null?editingTaskIdx:tasks.length-1]);
+  closeModal('modal-task');
+  renderTaskList();
+}
+
+function deleteTaskFromModal(){
+  if(editingTaskIdx===null) return;
+  const tasks=DB.get('tasks')||[];
+  tasks.splice(editingTaskIdx,1);
+  DB.set('tasks',tasks);
+  closeModal('modal-task');
+  renderTaskList();
+}
+
+// ===== STREAK =====
+function updateStreakData(taskId, dateStr, checked){
+  const streaks=DB.get('streaks')||{};
+  if(!streaks[taskId]) streaks[taskId]={};
+  streaks[taskId][dateStr]=checked;
+  DB.set('streaks',streaks);
+}
+
+function renderStreak(){
+  const tasks=(DB.get('tasks')||[]).filter(t=>{
+    const isRecurring=t.noEnd||(t.startDate!==t.endDate);
+    return isRecurring;
+  });
+  const checks=DB.get('checks')||{};
+  const el=document.getElementById('streak-list');
+  if(!tasks.length){
+    el.innerHTML='<div style="text-align:center;color:var(--text3);padding:40px;font-family:Space Mono;font-size:12px">継続タスクがありません</div>';
+    return;
+  }
+
+  el.innerHTML=tasks.map(t=>{
+    const stats=calcStreak(t,checks);
+    const pct=stats.total>0?Math.round(stats.done/stats.total*100):0;
+    return `<div class="streak-item">
+      <div class="streak-name">${t.name}</div>
+      <div class="streak-stats">
+        <div class="streak-stat">
+          <div class="streak-stat-val">${stats.done}/${stats.total}</div>
+          <div class="streak-stat-label">実施率</div>
+        </div>
+        <div class="streak-stat">
+          <div class="streak-stat-val">${pct}%</div>
+          <div class="streak-stat-label">達成率</div>
+        </div>
+        <div class="streak-stat">
+          <div class="streak-stat-val">${stats.totalDays}</div>
+          <div class="streak-stat-label">累計日数</div>
+        </div>
+        <div class="streak-stat">
+          <div class="streak-stat-val" style="color:var(--success)">${stats.current}</div>
+          <div class="streak-stat-label">連続日数</div>
+        </div>
+      </div>
+      <div class="streak-bar"><div class="streak-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function calcStreak(task, checks){
+  const today=todayStr();
+  const start=new Date(task.startDate+'T00:00:00');
+  const end=task.noEnd?new Date():new Date(Math.min(new Date(task.endDate+'T00:00:00'),new Date()));
+
+  let total=0,done=0,totalDays=0,current=0,streak=0;
+  const d=new Date(start);
+  while(d<=end){
+    const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if(isTaskActiveOnDate(task,ds)){
+      total++;
+      // find check for this task on this date
+      const anyCheck=Object.keys(checks).some(k=>k.startsWith(task.id+'_'+ds)&&checks[k]);
+      if(anyCheck){
+        done++;
+        totalDays++;
+        streak++;
+      } else {
+        if(ds<today) streak=0;
+      }
+    }
+    d.setDate(d.getDate()+1);
+  }
+  current=streak;
+  return {total,done,totalDays,current};
+}
+
+// ===== LIFE PLAN =====
+function renderLifePlan(){
+  const settings=DB.get('life-settings');
+  const events=DB.get('life-events')||[];
+
+  if(settings){
+    const birthDate=new Date(settings.birth+'T00:00:00');
+    const deathDate=new Date(birthDate);
+    deathDate.setFullYear(deathDate.getFullYear()+parseInt(settings.lifespan));
+    deathDate.setHours(23,59,59,0);
+    renderLifeCountdown(deathDate, 'life-cd-nums');
+  }
+
+  // events sorted by date + death at end
+  const allEvents=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+  if(settings){
+    const birthDate=new Date(settings.birth+'T00:00:00');
+    const deathDate=new Date(birthDate);
+    deathDate.setFullYear(deathDate.getFullYear()+parseInt(settings.lifespan));
+    const deathStr=`${deathDate.getFullYear()}-${String(deathDate.getMonth()+1).padStart(2,'0')}-${String(deathDate.getDate()).padStart(2,'0')}`;
+    allEvents.push({name:`想定寿命 (${settings.lifespan}歳)`, date:deathStr, isLifespan:true});
+  }
+
+  const now=new Date();
+  document.getElementById('life-events').innerHTML=allEvents.map((ev,i)=>{
+    const target=new Date(ev.date+'T23:59:59');
+    const passed=target<now;
+    const clickHandler = ev.isLifespan ? 'editLifespan()' : `editLifeEvent('${ev.id}')`;
+    return `<div class="life-event-item ${passed?'life-event-passed':''}" style="cursor:pointer;${ev.isLifespan?'border-color:var(--accent3)':''}" onclick="${clickHandler}">
+      <div class="life-event-name">${ev.name}${ev.isLifespan?'  ⏳':''}</div>
+      <div class="life-event-date">${ev.date}${passed?' · 達成済み':''}</div>
+      ${!passed?`<div class="life-event-cd" id="ev-cd-${i}"></div>`:''}
+      <div style="position:absolute;top:12px;right:12px;font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:1px">${ev.isLifespan?'寿命変更':'編集'}</div>
+    </div>`;
+  }).join('');
+}
+
+// Current display unit
+let lifeUnit = 'days';
+
+function setLifeUnit(unit){
+  lifeUnit = unit;
+  document.querySelectorAll('.unit-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.unit===unit);
+  });
+  // immediate re-render
+  const settings=DB.get('life-settings');
+  if(settings){
+    const birthDate=new Date(settings.birth+'T00:00:00');
+    const deathDate=new Date(birthDate);
+    deathDate.setFullYear(deathDate.getFullYear()+parseInt(settings.lifespan));
+    deathDate.setHours(23,59,59,0);
+    renderLifeCountdown(deathDate,'life-cd-nums');
+  }
+  const events=DB.get('life-events')||[];
+  const now=new Date();
+  const allEvents=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+  allEvents.forEach((ev,i)=>{
+    const target=new Date(ev.date+'T23:59:59');
+    if(target>now){
+      const cdEl=document.getElementById('ev-cd-'+i);
+      if(cdEl) renderEventCountdownInline(target, cdEl);
+    }
+  });
+}
+
+function calcCountdownValue(diff, unit){
+  const totalSec = Math.floor(diff/1000);
+  switch(unit){
+    case 'months':  return { val: Math.floor(totalSec/2629800), label: 'ヶ月' };
+    case 'weeks':   return { val: Math.floor(totalSec/604800),  label: '週間' };
+    case 'days':    return { val: Math.floor(totalSec/86400),   label: '日' };
+    case 'hours':   return { val: Math.floor(totalSec/3600),    label: '時間' };
+    case 'minutes': return { val: Math.floor(totalSec/60),      label: '分' };
+    case 'seconds': return { val: totalSec,                     label: '秒' };
+    default:        return { val: Math.floor(totalSec/86400),   label: '日' };
+  }
+}
+
+function renderLifeCountdown(target, containerId){
+  const now=new Date();
+  const diff=target-now;
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  if(diff<=0){
+    el.innerHTML='<div style="color:var(--text3);font-size:12px;font-family:Space Mono;padding:12px">—</div>';
+    return;
+  }
+  const {val, label} = calcCountdownValue(diff, lifeUnit);
+  el.innerHTML=`
+    <span class="life-cd-big-val">${val.toLocaleString()}</span>
+    <span class="life-cd-big-label">${label}</span>
+  `;
+}
+
+function startLifeTimer(){
+  if(lifeTimer)clearInterval(lifeTimer);
+  lifeTimer=setInterval(()=>{
+    const settings=DB.get('life-settings');
+    const events=DB.get('life-events')||[];
+    if(settings){
+      const birthDate=new Date(settings.birth+'T00:00:00');
+      const deathDate=new Date(birthDate);
+      deathDate.setFullYear(deathDate.getFullYear()+parseInt(settings.lifespan));
+      deathDate.setHours(23,59,59,0);
+      renderLifeCountdown(deathDate,'life-cd-nums');
+    }
+    const now=new Date();
+    const allEvents=[...events].sort((a,b)=>a.date.localeCompare(b.date));
+    if(settings){
+      const birthDate=new Date(settings.birth+'T00:00:00');
+      const deathDate=new Date(birthDate);
+      deathDate.setFullYear(deathDate.getFullYear()+parseInt(settings.lifespan));
+      const deathStr=`${deathDate.getFullYear()}-${String(deathDate.getMonth()+1).padStart(2,'0')}-${String(deathDate.getDate()).padStart(2,'0')}`;
+      allEvents.push({name:`想定寿命`, date:deathStr, isLifespan:true});
+    }
+    allEvents.forEach((ev,i)=>{
+      const target=new Date(ev.date+'T23:59:59');
+      if(target>now){
+        const cdEl=document.getElementById('ev-cd-'+i);
+        if(cdEl) renderEventCountdownInline(target, cdEl);
+      }
+    });
+  },1000);
+}
+
+function renderEventCountdownInline(target, el){
+  const now=new Date();
+  const diff=target-now;
+  if(diff<=0){el.innerHTML='';return;}
+  const {val, label} = calcCountdownValue(diff, lifeUnit);
+  el.innerHTML=`
+    <div class="life-event-cd-single">
+      <span class="life-event-cd-big-val">${val.toLocaleString()}</span>
+      <span class="life-event-cd-big-label">${label}</span>
+    </div>
+  `;
+}
+
+// ===== LIFE SETTINGS =====
+function populateLifeSettingsDropdowns(savedBirth, savedLifespan){
+  const curYear = new Date().getFullYear();
+  const yEl = document.getElementById('ls-birth-y');
+  yEl.innerHTML = '';
+  for(let y=curYear; y>=1920; y--){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y+'年'; yEl.appendChild(o);
+  }
+  const mEl = document.getElementById('ls-birth-m');
+  mEl.innerHTML = '';
+  for(let m=1; m<=12; m++){
+    const o=document.createElement('option');
+    o.value=String(m).padStart(2,'0'); o.textContent=m+'月'; mEl.appendChild(o);
+  }
+  const lsEl = document.getElementById('ls-lifespan');
+  lsEl.innerHTML = '';
+  for(let a=50; a<=120; a++){
+    const o=document.createElement('option');
+    o.value=a; o.textContent=a+'歳';
+    if(a===90) o.selected=true;
+    lsEl.appendChild(o);
+  }
+  if(savedBirth){
+    const parts=savedBirth.split('-');
+    yEl.value=parseInt(parts[0]);
+    mEl.value=parts[1];
+    updateBirthDays(parseInt(parts[2]));
+  } else {
+    yEl.value=1985; mEl.value='01'; updateBirthDays(1);
+  }
+  if(savedLifespan) lsEl.value=savedLifespan;
+}
+
+function updateBirthDays(selectDay){
+  const y=parseInt(document.getElementById('ls-birth-y').value);
+  const m=parseInt(document.getElementById('ls-birth-m').value);
+  const daysInMonth=new Date(y,m,0).getDate();
+  const dEl=document.getElementById('ls-birth-d');
+  const prev=selectDay||parseInt(dEl.value)||1;
+  dEl.innerHTML='';
+  for(let d=1;d<=daysInMonth;d++){
+    const o=document.createElement('option');
+    o.value=String(d).padStart(2,'0'); o.textContent=d+'日'; dEl.appendChild(o);
+  }
+  dEl.value=String(Math.min(prev,daysInMonth)).padStart(2,'0');
+}
+
+function showLifeSettings(){
+  const s=DB.get('life-settings');
+  populateLifeSettingsDropdowns(s?.birth, s?.lifespan);
+  document.getElementById('modal-life-settings').classList.remove('hidden');
+}
+
+function saveLifeSettings(){
+  const y=document.getElementById('ls-birth-y').value;
+  const m=document.getElementById('ls-birth-m').value;
+  const d=document.getElementById('ls-birth-d').value;
+  const birth=`${y}-${m}-${d}`;
+  const lifespan=document.getElementById('ls-lifespan').value;
+  if(!y||!m||!d){ alert('生年月日を入力してください'); return; }
+  DB.set('life-settings',{birth,lifespan});
+  closeModal('modal-life-settings');
+  renderLifePlan();
+  startLifeTimer();
+}
+
+// ===== LIFE EVENTS =====
+let editingEventId = null;
+
+function populateLeDateDropdowns(dateStr){
+  const curYear = new Date().getFullYear();
+
+  // 年齢プルダウン: 生年月日が設定されていれば現在年齢〜120歳
+  const ageEl = document.getElementById('le-age');
+  ageEl.innerHTML = '<option value="">年齢から入力</option>';
+  const settings = DB.get('life-settings');
+  if(settings && settings.birth){
+    const birth = new Date(settings.birth+'T00:00:00');
+    const today = new Date();
+    const currentAge = today.getFullYear() - birth.getFullYear()
+      - (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+    for(let a=currentAge; a<=120; a++){
+      const o=document.createElement('option');
+      o.value=a; o.textContent=a+'歳'; ageEl.appendChild(o);
+    }
+  }
+
+  const yEl = document.getElementById('le-year');
+  yEl.innerHTML = '';
+  for(let y=curYear+50; y>=1920; y--){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y+'年'; yEl.appendChild(o);
+  }
+  const mEl = document.getElementById('le-month');
+  mEl.innerHTML = '';
+  for(let m=1; m<=12; m++){
+    const o=document.createElement('option');
+    o.value=String(m).padStart(2,'0'); o.textContent=m+'月'; mEl.appendChild(o);
+  }
+  if(dateStr){
+    const parts=dateStr.split('-');
+    yEl.value=parseInt(parts[0]);
+    mEl.value=parts[1];
+    updateLeDay(parseInt(parts[2]));
+    // 年齢を逆算してセット
+    if(settings && settings.birth){
+      const birth = new Date(settings.birth+'T00:00:00');
+      const targetYear = parseInt(parts[0]);
+      const age = targetYear - birth.getFullYear();
+      if(ageEl.querySelector(`option[value="${age}"]`)) ageEl.value=age;
+    }
+  } else {
+    yEl.value=curYear+10; mEl.value='01'; updateLeDay(1);
+  }
+}
+
+function applyAgeToDate(){
+  const age = parseInt(document.getElementById('le-age').value);
+  if(!age) return;
+  const settings = DB.get('life-settings');
+  if(!settings || !settings.birth){ alert('先に人生設定で生年月日を登録してください'); return; }
+  const birth = new Date(settings.birth+'T00:00:00');
+  const targetYear = birth.getFullYear() + age;
+  const targetMonth = String(birth.getMonth()+1).padStart(2,'0');
+  const targetDay = String(birth.getDate()).padStart(2,'0');
+
+  document.getElementById('le-year').value = targetYear;
+  document.getElementById('le-month').value = targetMonth;
+  updateLeDay(birth.getDate());
+}
+
+function clearAgeSelect(){
+  // 手動で日付変更した場合は年齢選択をリセット
+  const ageEl = document.getElementById('le-age');
+  if(ageEl) ageEl.value = '';
+}
+
+function updateLeDay(selectDay){
+  const y=parseInt(document.getElementById('le-year').value);
+  const m=parseInt(document.getElementById('le-month').value);
+  const daysInMonth=new Date(y,m,0).getDate();
+  const dEl=document.getElementById('le-day');
+  const prev=selectDay||parseInt(dEl.value)||1;
+  dEl.innerHTML='';
+  for(let d=1;d<=daysInMonth;d++){
+    const o=document.createElement('option');
+    o.value=String(d).padStart(2,'0'); o.textContent=d+'日'; dEl.appendChild(o);
+  }
+  dEl.value=String(Math.min(prev,daysInMonth)).padStart(2,'0');
+}
+
+function showAddEvent(){
+  editingEventId = null;
+  document.getElementById('le-modal-title').textContent = 'NEW MILESTONE';
+  document.getElementById('le-name').value='';
+  document.getElementById('le-delete-btn').style.display='none';
+  populateLeDateDropdowns(null);
+  document.getElementById('modal-life-event').classList.remove('hidden');
+}
+
+function editLifeEvent(id){
+  const events=DB.get('life-events')||[];
+  const ev=events.find(e=>String(e.id)===String(id));
+  if(!ev) return;
+  editingEventId = id;
+  document.getElementById('le-modal-title').textContent = 'EDIT MILESTONE';
+  document.getElementById('le-name').value=ev.name;
+  document.getElementById('le-delete-btn').style.display='block';
+  populateLeDateDropdowns(ev.date);
+  document.getElementById('modal-life-event').classList.remove('hidden');
+}
+
+function saveLifeEvent(){
+  const name=document.getElementById('le-name').value.trim();
+  const y=document.getElementById('le-year').value;
+  const m=document.getElementById('le-month').value;
+  const d=document.getElementById('le-day').value;
+  const date=`${y}-${m}-${d}`;
+  if(!name||!y||!m||!d){ alert('イベント名と日付を入力してください'); return; }
+  const events=DB.get('life-events')||[];
+  if(editingEventId !== null){
+    const idx=events.findIndex(e=>String(e.id)===String(editingEventId));
+    if(idx!==-1) events[idx]={...events[idx], name, date};
+  } else {
+    events.push({id:Date.now(),name,date});
+  }
+  DB.set('life-events',events);
+  closeModal('modal-life-event');
+  renderLifePlan();
+  startLifeTimer();
+}
+
+function deleteLifeEventFromModal(){
+  if(editingEventId===null) return;
+  const events=DB.get('life-events')||[];
+  const idx=events.findIndex(e=>String(e.id)===String(editingEventId));
+  if(idx!==-1) events.splice(idx,1);
+  DB.set('life-events',events);
+  closeModal('modal-life-event');
+  renderLifePlan();
+}
+
+function editLifespan(){
+  const settings = DB.get('life-settings');
+  if(!settings){ alert('先に人生設定から生年月日・寿命を設定してください'); return; }
+  const el = document.getElementById('lse-lifespan');
+  el.innerHTML = '';
+  for(let a=50; a<=120; a++){
+    const o=document.createElement('option');
+    o.value=a; o.textContent=a+'歳'; el.appendChild(o);
+  }
+  el.value = settings.lifespan;
+  document.getElementById('modal-lifespan-edit').classList.remove('hidden');
+}
+
+function saveLifespanEdit(){
+  const lifespan = document.getElementById('lse-lifespan').value;
+  const settings = DB.get('life-settings');
+  if(!settings) return;
+  settings.lifespan = lifespan;
+  DB.set('life-settings', settings);
+  closeModal('modal-lifespan-edit');
+  renderLifePlan();
+  startLifeTimer();
+}
+
+function deleteLifeEvent(idx){
+  const events=DB.get('life-events')||[];
+  events.splice(idx,1);
+  DB.set('life-events',events);
+  renderLifePlan();
+}
+
+// ===== MODAL =====
+function closeModal(id){
+  document.getElementById(id).classList.add('hidden');
+}
+
+// ===== SETTINGS stubs =====
+function showScheduleSettings(){ /* TBD */ }
+function showTaskSettings(){ /* TBD */ }
+
+// ===== NOTIFICATIONS =====
+function requestNotificationPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+
+function scheduleNotification(task){
+  // Register with service worker
+  if('serviceWorker' in navigator && navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({
+      type:'SCHEDULE_NOTIFICATION',
+      task
+    });
+  }
+}
+
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
