@@ -553,6 +553,18 @@
       <div class="card-icon">💀</div>
     </div>
   </div>
+  <!-- 右下歯車ボタン -->
+  <button onclick="showAppSettings()" style="position:fixed;bottom:24px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text3);font-size:18px;cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center">⚙</button>
+</div>
+
+<!-- APP SETTINGS MODAL -->
+<div id="modal-app-settings" style="display:none;position:fixed;inset:0;z-index:500;background:#00000088;align-items:flex-end;justify-content:center">
+  <div class="modal-sheet" style="width:100%">
+    <div class="modal-title">SETTINGS</div>
+    <div style="font-family:Space Mono;font-size:11px;color:var(--text2);margin-bottom:20px;line-height:1.8">全データを削除します。<br>この操作は取り消せません。</div>
+    <button onclick="clearAllData()" style="width:100%;padding:14px;background:var(--danger);border:none;color:white;font-family:Noto Serif JP;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin-bottom:8px">全データを削除する</button>
+    <button onclick="document.getElementById('modal-app-settings').style.display='none'" style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--text2);font-family:Noto Serif JP;font-size:13px;cursor:pointer;border-radius:2px">キャンセル</button>
+  </div>
 </div>
 
 <!-- SCHEDULE SCREEN -->
@@ -636,13 +648,50 @@
   <div class="screen-header">
     <button class="back-btn" onclick="closeScreen('waste')">←</button>
     <div class="screen-title">WASTE LOG</div>
-    <button class="icon-btn" onclick="showWasteInput()" style="color:var(--danger);border-color:var(--danger)">＋</button>
   </div>
   <div class="screen-body">
+    <!-- 日付選択 -->
+    <div style="padding:20px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:10px">日付を選択</div>
+      <select class="form-input" id="waste-date-select" onchange="onWasteDateChange()">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+
+    <!-- 入力フォーム -->
+    <div id="waste-form-area" style="display:none;padding:16px">
+      <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:16px" id="waste-form-date-label"></div>
+      <div class="form-group">
+        <label class="form-label">惰眠</label>
+        <select class="form-input" id="w-sleep"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">G</label>
+        <select class="form-input" id="w-game"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">漫画アプリ</label>
+        <select class="form-input" id="w-manga"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SNS・配信</label>
+        <select class="form-input" id="w-sns"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">家族</label>
+        <select class="form-input" id="w-family"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">その他</label>
+        <select class="form-input" id="w-other"></select>
+      </div>
+      <button style="width:100%;padding:14px;background:var(--danger);border:none;color:white;font-family:Noto Serif JP;font-size:14px;font-weight:700;cursor:pointer;border-radius:2px;margin-top:8px" onclick="saveWasteAndReturn()">更新する</button>
+    </div>
+
     <!-- サマリー -->
-    <div style="padding:16px;background:var(--bg2);border-bottom:1px solid var(--border)">
+    <div style="padding:16px;border-top:1px solid var(--border);margin-top:8px">
       <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:12px">SUMMARY</div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
         <div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
           <div style="font-family:Bebas Neue;font-size:28px;color:var(--danger)" id="waste-total-val">0</div>
           <div style="font-family:Space Mono;font-size:9px;color:var(--text3);margin-top:2px">累計浪費</div>
@@ -652,66 +701,30 @@
           <div style="font-family:Space Mono;font-size:9px;color:var(--text3);margin-top:2px">1日平均</div>
         </div>
       </div>
-    </div>
-    <!-- グラフ -->
-    <div style="padding:16px">
+      <!-- グラフ -->
       <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:8px">CHART · 直近30日</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <button onclick="shiftWasteChart(-1)" style="background:none;border:1px solid var(--border);color:var(--text2);padding:4px 10px;font-size:11px;font-family:Space Mono;border-radius:2px;cursor:pointer">← PREV</button>
         <span id="waste-chart-range" style="font-family:Space Mono;font-size:9px;color:var(--text3);flex:1;text-align:center"></span>
         <button onclick="shiftWasteChart(1)" style="background:none;border:1px solid var(--border);color:var(--text2);padding:4px 10px;font-size:11px;font-family:Space Mono;border-radius:2px;cursor:pointer">NEXT →</button>
       </div>
       <canvas id="waste-chart" style="width:100%;height:200px"></canvas>
+      <!-- 凡例 -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#c87e7e;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">惰眠</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#c8a97e;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">G</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#7e9cc8;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">漫画</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#9c7ec8;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">SNS</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#7ec8a0;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">家族</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#888899;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">その他</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:var(--accent2);border-radius:50%"></div><span style="font-family:Space Mono;font-size:9px;color:var(--accent2)">日平均</span></div>
+      </div>
+      <!-- 履歴 -->
+      <div style="margin-top:16px">
+        <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:8px">HISTORY</div>
+        <div id="waste-history"></div>
+      </div>
     </div>
-    <!-- 凡例 -->
-    <div style="padding:0 16px;display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#c87e7e;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">惰眠</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#c8a97e;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">G</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#7e9cc8;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">漫画</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#9c7ec8;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">SNS/配信</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#7ec8a0;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">家族</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#888899;border-radius:2px"></div><span style="font-family:Space Mono;font-size:9px;color:var(--text2)">その他</span></div>
-      <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:var(--accent2);border-radius:50%"></div><span style="font-family:Space Mono;font-size:9px;color:var(--accent2)">日平均</span></div>
-    </div>
-    <!-- 履歴 -->
-    <div style="padding:0 16px 16px">
-      <div style="font-family:Space Mono;font-size:9px;color:var(--text3);letter-spacing:3px;margin-bottom:8px">HISTORY</div>
-      <div id="waste-history"></div>
-    </div>
-  </div>
-</div>
-
-<!-- WASTE INPUT MODAL -->
-<div class="modal-overlay hidden" id="modal-waste">
-  <div class="modal-sheet">
-    <div class="modal-title" style="color:var(--danger)">WASTE LOG</div>
-    <div style="font-family:Space Mono;font-size:10px;color:var(--text3);margin-bottom:16px" id="waste-input-date"></div>
-    <div class="form-group">
-      <label class="form-label">惰眠</label>
-      <select class="form-input" id="w-sleep"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">G</label>
-      <select class="form-input" id="w-game"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">漫画アプリ</label>
-      <select class="form-input" id="w-manga"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">SNS・配信</label>
-      <select class="form-input" id="w-sns"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">家族</label>
-      <select class="form-input" id="w-family"></select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">その他</label>
-      <select class="form-input" id="w-other"></select>
-    </div>
-    <button class="btn-primary" id="waste-save-btn" style="background:var(--danger);border-color:var(--danger)" onclick="saveWaste()">記録する</button>
-    <button class="btn-secondary" id="waste-cancel-btn" onclick="document.getElementById('modal-waste').classList.add('hidden')">キャンセル</button>
   </div>
 </div>
 
@@ -901,7 +914,6 @@ function enterApp(){
   updateHeaderDate();
   updatePreviews();
   requestNotificationPermission();
-  checkUnfilledWaste();
 }
 
 function checkUnfilledWaste(){
@@ -963,8 +975,7 @@ function forceWasteInput(dateStr){
     DB.set('waste-logs', logs);
     wasteModalClose();
     updatePreviews();
-    checkUnfilledWaste();
-  };
+    };
 }
 
 // ===== HEADER =====
@@ -1850,172 +1861,156 @@ const WASTE_CATS = [
   {key:'family', label:'家族',    color:'#7ec8a0'},
   {key:'other',  label:'その他',  color:'#888899'},
 ];
-let wasteChartOffset = 0; // pages back from today (0=latest)
+let wasteChartOffset = 0;
 
 function openWasteScreen(){
+  // 日付プルダウン: 今日・昨日・一昨日
+  const sel = document.getElementById('waste-date-select');
+  sel.innerHTML = '<option value="">選択してください</option>';
+  for(let i=1; i<=3; i++){
+    const ds = dateStrAdd(todayStr(), -i);
+    const d = new Date(ds+'T00:00:00');
+    const dayNames = ['日','月','火','水','木','金','土'];
+    const label = `${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
+    const opt = document.createElement('option');
+    opt.value = ds;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  }
+  document.getElementById('waste-form-area').style.display = 'none';
   renderWasteScreen();
-  scheduleWasteNotification();
+}
+
+function onWasteDateChange(){
+  const ds = document.getElementById('waste-date-select').value;
+  if(!ds){ document.getElementById('waste-form-area').style.display='none'; return; }
+  const existing = (DB.get('waste-logs')||{})[ds] || {};
+  document.getElementById('waste-form-date-label').textContent = ds + ' の記録';
+  WASTE_CATS.forEach(c => {
+    const el = document.getElementById('w-'+c.key);
+    if(!el) return;
+    el.innerHTML = '';
+    for(let m=0; m<=300; m+=15){
+      const h=Math.floor(m/60), mn=m%60;
+      const o=document.createElement('option');
+      o.value=m;
+      o.textContent=m===0?'0分':(h>0?(mn>0?`${h}時間${mn}分`:`${h}時間`):`${mn}分`);
+      if((existing[c.key]||0)===m) o.selected=true;
+      el.appendChild(o);
+    }
+  });
+  document.getElementById('waste-form-area').style.display = 'block';
+}
+
+function saveWasteAndReturn(){
+  const ds = document.getElementById('waste-date-select').value;
+  if(!ds) return;
+  const logs = DB.get('waste-logs') || {};
+  logs[ds] = {};
+  WASTE_CATS.forEach(c => {
+    logs[ds][c.key] = parseInt(document.getElementById('w-'+c.key).value)||0;
+  });
+  DB.set('waste-logs', logs);
+  renderWasteScreen();
+  updatePreviews();
+  closeScreen('waste');
 }
 
 function renderWasteScreen(){
   const logs = DB.get('waste-logs') || {};
   const dates = Object.keys(logs).sort();
-
-  // Summary
-  let totalMins = 0, dayCount = dates.length;
-  dates.forEach(d => {
-    WASTE_CATS.forEach(c => { totalMins += (logs[d][c.key]||0); });
-  });
-  const avgMins = dayCount > 0 ? Math.round(totalMins / dayCount) : 0;
-
-  // Auto unit
+  let totalMins = 0;
+  dates.forEach(d => WASTE_CATS.forEach(c => { totalMins += (logs[d][c.key]||0); }));
+  const avgMins = dates.length > 0 ? Math.round(totalMins / dates.length) : 0;
   function fmtTime(mins){
-    if(totalMins >= 600) return `${(mins/60).toFixed(1)}h`;
+    const h=Math.floor(mins/60), m=mins%60;
+    if(h>0) return m>0?`${h}時間${m}分`:`${h}時間`;
     return `${mins}分`;
   }
-
-  const totalEl = document.getElementById('waste-total-val');
-  const avgEl = document.getElementById('waste-avg-val');
-  if(totalEl) totalEl.textContent = fmtTime(totalMins);
-  if(avgEl) avgEl.textContent = fmtTime(avgMins) + '/日';
-
+  const tv=document.getElementById('waste-total-val');
+  const av=document.getElementById('waste-avg-val');
+  if(tv) tv.textContent=fmtTime(totalMins);
+  if(av) av.textContent=fmtTime(avgMins)+'/日';
   renderWasteChart(logs);
   renderWasteHistory(logs, dates);
 }
 
 function renderWasteChart(logs){
-  const canvas = document.getElementById('waste-chart');
+  const canvas=document.getElementById('waste-chart');
   if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.offsetWidth || 320;
-  const H = 200;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  ctx.scale(dpr, dpr);
-
-  // Build 30-day window
-  const today = new Date();
-  const endIdx = wasteChartOffset; // 0=today's page
-  const days = [];
-  for(let i=29; i>=0; i--){
-    const d = new Date(today);
-    d.setDate(d.getDate() - (endIdx * 30) - i);
-    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    days.push(ds);
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||320;
+  const H=200;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);
+  const today=new Date();
+  const days=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-(wasteChartOffset*30)-i);
+    days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
   }
-
-  // range label
-  const rangeEl = document.getElementById('waste-chart-range');
-  if(rangeEl) rangeEl.textContent = days[0].slice(5) + ' 〜 ' + days[29].slice(5);
-
-  const allLogs = DB.get('waste-logs') || {};
-
-  // calc max for scale
-  let maxDay = 0;
-  days.forEach(ds => {
-    let sum = 0;
-    WASTE_CATS.forEach(c => sum += (allLogs[ds]?.[c.key]||0));
-    if(sum > maxDay) maxDay = sum;
-  });
-
-  // calc running avg per day
-  const allDates = Object.keys(allLogs).sort();
-  const avgLine = days.map(ds => {
-    const before = allDates.filter(d => d <= ds);
+  const rangeEl=document.getElementById('waste-chart-range');
+  if(rangeEl) rangeEl.textContent=days[0].slice(5)+' 〜 '+days[29].slice(5);
+  let maxDay=0;
+  days.forEach(ds=>{ let s=0; WASTE_CATS.forEach(c=>s+=(logs[ds]?.[c.key]||0)); if(s>maxDay)maxDay=s; });
+  const allDates=Object.keys(logs).sort();
+  const avgLine=days.map(ds=>{
+    const before=allDates.filter(d=>d<=ds);
     if(!before.length) return null;
-    let total = 0;
-    before.forEach(d => WASTE_CATS.forEach(c => total += (allLogs[d][c.key]||0)));
-    return total / before.length;
+    let t=0; before.forEach(d=>WASTE_CATS.forEach(c=>t+=(logs[d][c.key]||0)));
+    return t/before.length;
   });
-  const maxAvg = Math.max(...avgLine.filter(v=>v!==null), 1);
-  const scaleMax = Math.max(maxDay, maxAvg, 1);
-
-  const pad = {l:32, r:8, t:12, b:24};
-  const cW = W - pad.l - pad.r;
-  const cH = H - pad.t - pad.b;
-  const barW = Math.max(2, (cW / days.length) - 1);
-
-  ctx.clearRect(0, 0, W, H);
-
-  // grid lines
-  ctx.strokeStyle = '#2a2a3e';
-  ctx.lineWidth = 0.5;
-  for(let i=0; i<=4; i++){
-    const y = pad.t + cH - (cH * i / 4);
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-    const label = Math.round(scaleMax * i / 4);
-    const unit = scaleMax >= 600 ? (label/60).toFixed(1)+'h' : label+'m';
-    ctx.fillStyle = '#5a5a72';
-    ctx.font = `${7 * dpr / dpr}px monospace`;
-    ctx.textAlign = 'right';
-    ctx.fillText(unit, pad.l - 2, y + 3);
+  const scaleMax=Math.max(maxDay,...avgLine.filter(v=>v!==null),1);
+  const pad={l:36,r:8,t:12,b:24};
+  const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+  const barW=Math.max(2,(cW/days.length)-1);
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<=4;i++){
+    const y=pad.t+cH-(cH*i/4);
+    ctx.strokeStyle='#2a2a3e'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    const v=Math.round(scaleMax*i/4);
+    const lbl=v>=60?(v/60).toFixed(1)+'h':v+'m';
+    ctx.fillStyle='#5a5a72'; ctx.font='7px monospace'; ctx.textAlign='right';
+    ctx.fillText(lbl,pad.l-2,y+3);
   }
-
-  // bars
-  days.forEach((ds, i) => {
-    const x = pad.l + i * (cW / days.length);
-    let yBase = pad.t + cH;
-    WASTE_CATS.forEach(c => {
-      const mins = allLogs[ds]?.[c.key] || 0;
-      if(!mins) return;
-      const bH = (mins / scaleMax) * cH;
-      ctx.fillStyle = c.color;
-      ctx.fillRect(x, yBase - bH, barW, bH);
-      yBase -= bH;
+  days.forEach((ds,i)=>{
+    const x=pad.l+i*(cW/days.length); let yBase=pad.t+cH;
+    WASTE_CATS.forEach(c=>{
+      const mins=logs[ds]?.[c.key]||0; if(!mins) return;
+      const bH=(mins/scaleMax)*cH;
+      ctx.fillStyle=c.color; ctx.fillRect(x,yBase-bH,barW,bH); yBase-=bH;
     });
   });
-
-  // avg line
-  ctx.strokeStyle = '#7e9cc8';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([3,3]);
-  ctx.beginPath();
-  let started = false;
-  avgLine.forEach((v, i) => {
-    if(v === null) return;
-    const x = pad.l + i * (cW / days.length) + barW/2;
-    const y = pad.t + cH - (v / scaleMax) * cH;
-    if(!started){ ctx.moveTo(x, y); started=true; } else { ctx.lineTo(x, y); }
+  ctx.strokeStyle='#7e9cc8'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+  ctx.beginPath(); let started=false;
+  avgLine.forEach((v,i)=>{
+    if(v===null) return;
+    const x=pad.l+i*(cW/days.length)+barW/2, y=pad.t+cH-(v/scaleMax)*cH;
+    if(!started){ctx.moveTo(x,y);started=true;}else{ctx.lineTo(x,y);}
   });
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // x-axis labels (every 5 days)
-  ctx.fillStyle = '#5a5a72';
-  ctx.font = `${7 * dpr / dpr}px monospace`;
-  ctx.textAlign = 'center';
-  days.forEach((ds, i) => {
-    if(i % 5 === 0){
-      const x = pad.l + i * (cW / days.length) + barW/2;
-      ctx.fillText(ds.slice(8), x, H - 4);
-    }
-  });
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#5a5a72'; ctx.font='7px monospace'; ctx.textAlign='center';
+  days.forEach((ds,i)=>{ if(i%5===0){ const x=pad.l+i*(cW/days.length)+barW/2; ctx.fillText(ds.slice(8),x,H-4); } });
 }
 
 function shiftWasteChart(dir){
-  const allLogs = DB.get('waste-logs') || {};
-  const dates = Object.keys(allLogs).sort();
-  const maxOffset = Math.ceil(dates.length / 30);
-  wasteChartOffset = Math.max(0, Math.min(maxOffset, wasteChartOffset - dir));
-  renderWasteChart(allLogs);
+  wasteChartOffset=Math.max(0,wasteChartOffset-dir);
+  renderWasteChart(DB.get('waste-logs')||{});
 }
 
-function renderWasteHistory(logs, dates){
-  const el = document.getElementById('waste-history');
+function renderWasteHistory(logs,dates){
+  const el=document.getElementById('waste-history');
   if(!el) return;
-  if(!dates.length){
-    el.innerHTML = '<div style="text-align:center;color:var(--text3);padding:20px;font-family:Space Mono;font-size:11px">記録がありません</div>';
-    return;
-  }
-  el.innerHTML = [...dates].reverse().slice(0,30).map(ds => {
-    const d = logs[ds];
-    const total = WASTE_CATS.reduce((s,c) => s+(d[c.key]||0), 0);
-    const h = Math.floor(total/60), m = total%60;
-    const timeStr = h>0?(m>0?`${h}時間${m}分`:`${h}時間`):`${m}分`;
-    const bars = WASTE_CATS.map(c => d[c.key]>0?`<span style="color:${c.color}">${c.label}:${d[c.key]}分</span>`:'').filter(Boolean).join(' · ');
+  if(!dates.length){ el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-family:Space Mono;font-size:11px">記録がありません</div>'; return; }
+  el.innerHTML=[...dates].reverse().slice(0,30).map(ds=>{
+    const d=logs[ds];
+    const total=WASTE_CATS.reduce((s,c)=>s+(d[c.key]||0),0);
+    const h=Math.floor(total/60),m=total%60;
+    const timeStr=h>0?(m>0?`${h}時間${m}分`:`${h}時間`):`${m}分`;
+    const bars=WASTE_CATS.map(c=>d[c.key]>0?`<span style="color:${c.color}">${c.label}:${d[c.key]}分</span>`:'').filter(Boolean).join(' · ');
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px">
         <span style="font-family:Space Mono;font-size:10px;color:var(--text2)">${ds}</span>
@@ -2026,62 +2021,28 @@ function renderWasteHistory(logs, dates){
   }).join('');
 }
 
-function showWasteInput(){
-  const today = todayStr();
-  document.getElementById('waste-input-date').textContent = today + ' の記録';
-  const existing = (DB.get('waste-logs')||{})[today] || {};
-  ['sleep','game','manga','sns','family','other'].forEach((key) => {
-    const el = document.getElementById('w-'+key);
-    if(!el) return;
-    el.innerHTML = '';
-    for(let m=0; m<=300; m+=15){
-      const o = document.createElement('option');
-      const h = Math.floor(m/60), mn = m%60;
-      o.value = m;
-      o.textContent = m===0?'0分':(h>0?(mn>0?`${h}時間${mn}分`:`${h}時間`):`${mn}分`);
-      if((existing[key]||0)===m) o.selected=true;
-      el.appendChild(o);
-    }
-  });
-  wasteModalOpen();
-  document.getElementById('waste-save-btn').onclick = saveWaste;
-  document.getElementById('waste-cancel-btn').style.display = 'block';
+function updateWastePreview(){
+  const logs=DB.get('waste-logs')||{};
+  const dates=Object.keys(logs);
+  const el=document.getElementById('preview-waste');
+  if(!el) return;
+  if(!dates.length){ return; }
+  let total=0;
+  dates.forEach(d=>WASTE_CATS.forEach(c=>total+=(logs[d][c.key]||0)));
+  const h=Math.floor(total/60);
+  el.textContent=`累計浪費: ${h}時間${total%60}分`;
 }
 
-function saveWaste(){
-  const today = todayStr();
-  const logs = DB.get('waste-logs') || {};
-  logs[today] = {
-    sleep:  parseInt(document.getElementById('w-sleep').value)||0,
-    game:   parseInt(document.getElementById('w-game').value)||0,
-    manga:  parseInt(document.getElementById('w-manga').value)||0,
-    sns:    parseInt(document.getElementById('w-sns').value)||0,
-    family: parseInt(document.getElementById('w-family').value)||0,
-    other:  parseInt(document.getElementById('w-other').value)||0,
-  };
-  DB.set('waste-logs', logs);
-  wasteModalClose();
-  renderWasteScreen();
-  updatePreviews();
+// ===== APP SETTINGS =====
+function showAppSettings(){
+  document.getElementById('modal-app-settings').style.display = 'flex';
 }
 
-function wasteModalClose(){
-  const modal = document.getElementById('modal-waste');
-  modal.style.display = 'none';
-  modal.classList.add('hidden');
-}
-
-function wasteModalOpen(){
-  const modal = document.getElementById('modal-waste');
-  modal.style.display = '';
-  modal.classList.remove('hidden');
-}
-
-function scheduleWasteNotification(){
-  if(!('Notification' in window) || Notification.permission !== 'granted') return;
-  if('serviceWorker' in navigator && navigator.serviceWorker.controller){
-    navigator.serviceWorker.controller.postMessage({ type:'SCHEDULE_WASTE_NOTIFICATION' });
-  }
+function clearAllData(){
+  if(!confirm('本当に全データを削除しますか？この操作は取り消せません。')) return;
+  localStorage.clear();
+  document.getElementById('modal-app-settings').style.display = 'none';
+  location.reload();
 }
 
 // ===== SERVICE WORKER =====
